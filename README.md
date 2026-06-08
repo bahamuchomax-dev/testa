@@ -1,6 +1,5 @@
-﻿# Oriex
+Oriex GitHub Pages 修正版
 
-GitHub Pages 用の静的HTMLです。
-
-- index.html をそのまま GitHub Pages で公開できます。
-- iOSで確認するときは、ホーム画面アイコンを削除してから追加し直してください。
+- 学習タブの白画面対策
+- 画面下まで表示範囲が伸びるようにスクロール構造を調整
+- manifest の start_url 警告を修正
