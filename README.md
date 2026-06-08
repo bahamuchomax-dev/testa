@@ -1,8 +1,6 @@
-﻿# Oriex GitHub Pages package
+﻿# Oriex
 
-Upload these files to the root of the GitHub repository:
+GitHub Pages 用の静的HTMLです。
 
-- index.html
-- .nojekyll
-
-GitHub Pages should serve index.html from the repository root.
+- index.html をそのまま GitHub Pages で公開できます。
+- iOSで確認するときは、ホーム画面アイコンを削除してから追加し直してください。
