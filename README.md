@@ -1,14 +1,8 @@
-﻿# Oriex
+﻿# Oriex GitHub Pages package
 
-GitHub Pages用の配布ファイルです。
+Upload these files to the root of the GitHub repository:
 
-## Upload
+- index.html
+- .nojekyll
 
-このフォルダの中身をGitHubリポジトリのルートに置くか、`gh-pages` ブランチに配置してください。
-
-- `index.html`: アプリ本体
-- `.nojekyll`: GitHub PagesのJekyll処理を無効化
-
-## iOS PWA
-
-Safariでページを開き、「ホーム画面に追加」してください。既に追加済みの場合は、古いホーム画面アイコンを削除してから追加し直してください。
+GitHub Pages should serve index.html from the repository root.
