@@ -5,7 +5,7 @@
    - same-origin GET (manifest, etc.): stale-while-revalidate
    - everything else (Firestore/Firebase/Google APIs): not intercepted -> normal network
 */
-var VERSION = 'v5.2.36';
+var VERSION = 'v5.2.37';
 var SHELL = 'oriex-shell-' + VERSION;
 var FONTS = 'oriex-fonts-v1';
 var SHELL_URLS = ['./', './index.html', './manifest.webmanifest'];
