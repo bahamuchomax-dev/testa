@@ -1,85 +1,27 @@
-/* Oriex service worker — offline app shell.
-   Strategy:
-   - navigations (HTML): network-first, fall back to cached app when offline
-   - Google Fonts: stale-while-revalidate (works offline after first load)
-   - same-origin GET (manifest, etc.): stale-while-revalidate
-   - everything else (Firestore/Firebase/Google APIs): not intercepted -> normal network
-*/
-var VERSION = 'v5.2.44';
-var SHELL = 'oriex-shell-' + VERSION;
-var FONTS = 'oriex-fonts-v1';
-var SHELL_URLS = ['./', './index.html', './manifest.webmanifest'];
-
+var VERSION = 'oriex-next-v0.3.0';
+var CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', function (e) {
-  self.skipWaiting();
-  e.waitUntil(
-    caches.open(SHELL).then(function (c) {
-      return Promise.all(SHELL_URLS.map(function (u) {
-        return fetch(u, { cache: 'no-cache' })
-          .then(function (r) { if (r && r.ok) return c.put(u, r.clone()); })
-          .catch(function () {});
-      }));
-    })
-  );
+  e.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll(CORE); }).then(function () { return self.skipWaiting(); }));
 });
-
 self.addEventListener('activate', function (e) {
-  e.waitUntil(
-    caches.keys().then(function (keys) {
-      return Promise.all(keys.map(function (k) {
-        if (k !== SHELL && k !== FONTS) return caches.delete(k);
-      }));
-    }).then(function () { return self.clients.claim(); })
-  );
+  e.waitUntil(caches.keys().then(function (ks) {
+    return Promise.all(ks.filter(function (k) { return k !== VERSION; }).map(function (k) { return caches.delete(k); }));
+  }).then(function () { return self.clients.claim(); }));
 });
-
-function swr(cacheName, req) {
-  return caches.open(cacheName).then(function (c) {
-    return c.match(req).then(function (cached) {
-      var net = fetch(req).then(function (res) {
-        if (res && res.status === 200) c.put(req, res.clone());
-        return res;
-      }).catch(function () { return cached; });
-      return cached || net;
-    });
-  });
-}
-
 self.addEventListener('fetch', function (e) {
-  var req = e.request;
-  if (req.method !== 'GET') return;
-  var url;
-  try { url = new URL(req.url); } catch (_) { return; }
-
-  // App navigations: network-first, offline -> cached shell
-  if (req.mode === 'navigate') {
-    e.respondWith(
-      fetch(req).then(function (res) {
-        if (res && res.ok) {
-          var copy = res.clone();
-          caches.open(SHELL).then(function (c) { c.put('./', copy); });
-        }
-        return res;
-      }).catch(function () {
-        return caches.match('./').then(function (r) {
-          return r || caches.match('./index.html');
-        });
-      })
-    );
+  if (e.request.method !== 'GET') return;
+  var url = new URL(e.request.url);
+  if (e.request.mode === 'navigate') {
+    e.respondWith(fetch(e.request).then(function (r) {
+      var cp = r.clone(); caches.open(VERSION).then(function (c) { c.put('./index.html', cp); }); return r;
+    }).catch(function () { return caches.match('./index.html'); }));
     return;
   }
-
-  // Google Fonts: stale-while-revalidate
-  if (url.origin === 'https://fonts.googleapis.com' || url.origin === 'https://fonts.gstatic.com') {
-    e.respondWith(swr(FONTS, req));
-    return;
+  if (url.origin === location.origin) {
+    e.respondWith(caches.match(e.request).then(function (hit) {
+      return hit || fetch(e.request).then(function (r) {
+        var cp = r.clone(); caches.open(VERSION).then(function (c) { c.put(e.request, cp); }); return r;
+      });
+    }));
   }
-
-  // Same-origin static assets: stale-while-revalidate
-  if (url.origin === self.location.origin) {
-    e.respondWith(swr(SHELL, req));
-    return;
-  }
-
-  // else: Firestore / Firebase / other APIs -> let the network handle it
 });
