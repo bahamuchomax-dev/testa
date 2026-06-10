@@ -5,10 +5,10 @@
    - same-origin GET (manifest, etc.): stale-while-revalidate
    - everything else (Firestore/Firebase/Google APIs): not intercepted -> normal network
 */
-var VERSION = 'v5.18.0';
+var VERSION = 'v5.20.0';
 var SHELL = 'oriex-shell-' + VERSION;
 var FONTS = 'oriex-fonts-v1';
-var SHELL_URLS = ['./', './index.html', './manifest.webmanifest'];
+var SHELL_URLS = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function (e) {
   self.skipWaiting();
