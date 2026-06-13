@@ -148,7 +148,7 @@ describe("no dangerous DOM sinks in non-legacy source (static)", () => {
   });
 
   it("localAi panels render text without dangerouslySetInnerHTML", () => {
-    const panelFiles = SRC_FILES.filter((f) => f.includes("/localAi/"));
+    const panelFiles = SRC_FILES.filter((f) => f.replace(/\\/g, "/").includes("/localAi/"));
     expect(panelFiles.length).toBeGreaterThan(0);
     for (const f of panelFiles) {
       expect(readFileSync(f, "utf8")).not.toContain("dangerouslySetInnerHTML");

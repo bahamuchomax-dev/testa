@@ -11,6 +11,15 @@
 - [x] 古い説明/コメントを修正。three.js の index.html 同期読み込み前提コメント、CSP が提案のみという古い説明、securityScan の FULL 許可説明を現仕様に合わせた。
 - [ ] 未対応事項: GitHub Pages 反映後の PC 実機確認、スマホ実機確認、Service Worker 更新確認、ハムスター3D確認、テーマ写真確認、アバター保存/復元確認、XSS 簡易確認。
 
+## UI 小修正（選択中教科カード / ローカルAI UI 一時停止）
+
+- [x] 選択中教科カードが透明ボタンのように見える UI バグを修正。原因は legacy 側が選択中カードに `background: ${色}12` 相当の極薄アクセント背景をインライン指定していたこと。
+- [x] legacy bundle は直接編集せず、`src/services/oxHelpers.js` で英単語/熟語/漢字/化学/古文のカードだけに `data-ox-subject-card` / `data-ox-subject-selected` を付与し、`src/styles/app.css` の限定 CSS override で選択中も白/半透明白のカード背景を維持するようにした。
+- [x] 選択中カードは accent 色の border / label / underline / icon を維持。テーマ写真背景では白カードの不透明度を少し上げ、視認性を落とさない。
+- [x] ローカルAIボタンは一時的に非表示/アクセス停止。`src/main.jsx` は `LOCAL_AI_UI_ENABLED` が `false` の間 `mountLocalAiSidecar` を読み込まず、通常起動で浮遊ボタンを出さない。
+- [x] `App.jsx` の `TABS` から `localai` / `AI` を外した。ローカルAI実装自体（`src/features/localAi/`、Ollama 通信、検証テスト）は削除せず保持。
+- [x] 将来再有効化する場合は `src/features/localAi/uiFlag.js` の `LOCAL_AI_UI_ENABLED` と sidecar mount / App 側導線を戻す。
+
 ## 監査方法と前提（重要）
 
 - このコンテナ環境では**ブラウザでの実操作（クリック/入力/再読込）はできません**。本監査は

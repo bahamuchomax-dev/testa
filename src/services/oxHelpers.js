@@ -334,4 +334,72 @@ window.__oxAv=(function(){
   }
   return {openSettings:openSettings,setSettings:setSettings,resetDefault:resetDefault,refresh:refresh,_cur:cur};
 })();
+
+window.__oxSubjectCards=(function(){
+  var SUBJECT_CARD_LABELS=["英単語","熟語","漢字","化学","古文"];
+  var SUBJECT_CARD_COLORS={
+    "英単語":{accent:"#0891b2",soft:"#e5f6fb"},
+    "熟語":{accent:"#7c3aed",soft:"#f0e9ff"},
+    "漢字":{accent:"#dc2626",soft:"#fee2e2"},
+    "化学":{accent:"#059669",soft:"#e0f6ee"},
+    "古文":{accent:"#b45309",soft:"#fff0dc"}
+  };
+  function directSpans(btn){
+    var out=[];
+    for(var i=0;i<btn.children.length;i++){
+      if(btn.children[i]&&btn.children[i].tagName==="SPAN")out.push(btn.children[i]);
+    }
+    return out;
+  }
+  function labelOf(btn){
+    var spans=directSpans(btn);
+    if(spans.length<3)return null;
+    if(!spans[0].querySelector("svg"))return null;
+    if((spans[2].textContent||"").trim()!=="")return null;
+    var label=(spans[1].textContent||"").trim();
+    return SUBJECT_CARD_LABELS.indexOf(label)>=0?label:null;
+  }
+  function isSelected(btn){
+    var spans=directSpans(btn);
+    var underline=spans[2];
+    var w=parseFloat((underline&&underline.style&&underline.style.width)||"0");
+    var border=(btn.style&&btn.style.border)||"";
+    return w>=16||border.indexOf("1.5px")>=0;
+  }
+  function annotate(){
+    try{
+      var buttons=document.querySelectorAll("button");
+      for(var i=0;i<buttons.length;i++){
+        var btn=buttons[i],label=labelOf(btn);
+        if(label){
+          var c=SUBJECT_CARD_COLORS[label];
+          btn.setAttribute("data-ox-subject-card",label);
+          btn.setAttribute("data-ox-subject-selected",isSelected(btn)?"true":"false");
+          btn.style.setProperty("--ox-subject-accent",c.accent);
+          btn.style.setProperty("--ox-subject-soft",c.soft);
+        }else if(btn.hasAttribute&&btn.hasAttribute("data-ox-subject-card")){
+          btn.removeAttribute("data-ox-subject-card");
+          btn.removeAttribute("data-ox-subject-selected");
+          btn.style.removeProperty("--ox-subject-accent");
+          btn.style.removeProperty("--ox-subject-soft");
+        }
+      }
+    }catch(e){}
+  }
+  var queued=false;
+  function schedule(){
+    if(queued)return;
+    queued=true;
+    (window.requestAnimationFrame||setTimeout)(function(){queued=false;annotate();},16);
+  }
+  try{
+    if(document.readyState!=="loading")setTimeout(annotate,0);
+    else document.addEventListener("DOMContentLoaded",annotate);
+    if(window.MutationObserver){
+      new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:["style","class"]});
+    }
+    setInterval(annotate,700);
+  }catch(e){}
+  return {refresh:annotate,labels:function(){return SUBJECT_CARD_LABELS.slice();}};
+})();
 window.__oxStudy=function(uid,logs){var PFX="oriex_local_study_minutes_";var want=(uid==null?"local":String(uid));var key=PFX+want;function dkey(d){var t=new Date(d);if(isNaN(t))return"";var i=new Date(t.getTime()+(t.getTimezoneOffset()+540)*6e4);return i.getFullYear()+"/"+(i.getMonth()+1)+"/"+i.getDate();}function ld(l){if(!l)return 0;var t=l.createdAt!=null?l.createdAt:l.studiedAt!=null?l.studiedAt:l.date!=null?l.date:l.timestamp;if(t==null)return 0;if(typeof t=="number")return t;if(typeof t=="string"){var v=Date.parse(t);return isNaN(v)?0:v;}return 0;}var map={};(logs||[]).forEach(function(l){if(!l)return;var lu=(l.uid==null?"local":String(l.uid));if(lu!==want)return;var dk=dkey(ld(l));if(!dk)return;var mn=Number(l.minutes)||0;if(mn<=0)return;map[dk]=(Number(map[dk])||0)+mn;});var empty=true;for(var kk in map){if(Object.prototype.hasOwnProperty.call(map,kk)){empty=false;break;}}if(empty){var stored={};try{var s=localStorage.getItem(key);var o=s?JSON.parse(s):null;if(o&&typeof o=="object")stored=o;}catch(e){}map=stored;}else{try{localStorage.setItem(key,JSON.stringify(map));}catch(e){}}var now=new Date();var todayKey=dkey(now);var today=Number(map[todayKey])||0;var days=[];for(var v=6;v>=0;v--){var d=new Date(now);d.setDate(now.getDate()-v);var k=dkey(d);days.push({k:k,lb:(d.getMonth()+1)+"/"+d.getDate(),m:Number(map[k])||0});}var total=days.reduce(function(a,b){return a+(b.m||0);},0);return{today:today,days:days,total:total,todayKey:todayKey,map:map};};

@@ -61,6 +61,8 @@ Vite は `base: "./"` で設定しており、GitHub Pages のプロジェクト
 
 ローカルAI機能は、同じ端末で起動した Ollama にだけ接続します。外部AI API、外部AI SDK、外部AI APIキー入力欄は使いません。外部AI APIを追加しないでください。
 
+ローカルAI実装は残っていますが、現在UIからのアクセスは一時停止中です。通常画面の浮遊ボタンと App タブには表示されません。再有効化する場合は `src/features/localAi/uiFlag.js` の `LOCAL_AI_UI_ENABLED` と sidecar mount / App 側の導線を戻してください。
+
 Ollama の必要条件:
 
 ```bash

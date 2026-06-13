@@ -2,12 +2,14 @@
 
 Oriex のローカルAI機能は、同じ端末で動く Ollama だけを使う学習支援機能です。外部AI API、APIキー、外部AI SDKは使いません。
 
+> 現在、ローカルAIの UI 導線は一時停止中です。`src/features/localAi/` の実装と Ollama 通信コードは残していますが、通常画面の浮遊ボタンと App タブからはアクセスできません。再有効化する場合は `src/features/localAi/uiFlag.js` の `LOCAL_AI_UI_ENABLED` と sidecar mount / App 側の導線を戻してください。
+
 ## 起動
 
 1. Ollama をインストールする。
 2. Ollama を起動する。
 3. 推奨モデルを取得する。
-4. Oriex を開き、ローカルAI画面から接続確認する。
+4. UI 一時停止を解除した環境で Oriex を開き、ローカルAI画面から接続確認する。
 
 ```bash
 ollama serve

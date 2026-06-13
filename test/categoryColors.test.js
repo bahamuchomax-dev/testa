@@ -63,10 +63,30 @@ describe("categoryColors map", () => {
 
 describe("CSS color fallbacks are present (static)", () => {
   const APP_CSS = readFileSync("src/styles/app.css", "utf8");
+  const OX_HELPERS = readFileSync("src/services/oxHelpers.js", "utf8");
   it("icon backgrounds have an accent fallback", () => {
     expect(APP_CSS).toMatch(/\.rx-q \.ic[\s\S]{0,80}background:\s*var\(--accent-soft/);
   });
   it("category dot has an accent fallback", () => {
     expect(APP_CSS).toMatch(/\.rx-frame-chip span\s*\{\s*background:\s*var\(--accent/);
+  });
+
+  it("marks only the five legacy subject cards for the selected-card override", () => {
+    expect(OX_HELPERS).toContain("window.__oxSubjectCards");
+    const labels = (OX_HELPERS.match(/var SUBJECT_CARD_LABELS=\[([\s\S]*?)\];/) || [])[1] || "";
+    expect(labels).toContain('"英単語"');
+    expect(labels).toContain('"熟語"');
+    expect(labels).toContain('"漢字"');
+    expect(labels).toContain('"化学"');
+    expect(labels).toContain('"古文"');
+    expect(labels).not.toContain('"AI"');
+    expect(labels).not.toContain('"先生"');
+  });
+
+  it("keeps selected subject cards on a non-transparent white surface", () => {
+    expect(APP_CSS).toMatch(/button\[data-ox-subject-card\][\s\S]*background:rgba\(255,255,255,\.\d+\)!important/);
+    expect(APP_CSS).toMatch(/button\[data-ox-subject-card\]\[data-ox-subject-selected="true"\][\s\S]*background:rgba\(255,255,255,\.\d+\)!important/);
+    expect(APP_CSS).toMatch(/button\[data-ox-subject-card\]\[data-ox-subject-selected="true"\][\s\S]*border:1\.5px solid color-mix/);
+    expect(APP_CSS).not.toMatch(/button\[data-ox-subject-card\][^{]*\{[^}]*background:\s*transparent/i);
   });
 });

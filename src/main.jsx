@@ -26,11 +26,18 @@ import "./services/oxHelpers.js";           // -> window.__oxBg / __oxPbg / __ox
 //    Screens are being peeled out of here into src/features/*.
 import "./legacy/oriex-app.bundle.js"; // self-mounts the React app into #root
 
-// 4) Local AI (Ollama only). Mounted as a separate root so it overlays the
-//    live app as a floating launcher + drawer WITHOUT editing the legacy
-//    bundle. In the future React shell (src/App.jsx) it is a normal tab.
-import { mountLocalAiSidecar } from "./features/localAi/index.jsx";
-mountLocalAiSidecar();
+// 4) Local AI (Ollama only) UI is temporarily paused. Keep the implementation
+//    in src/features/localAi, but do not load its chunk or show the floating
+//    launcher unless this flag is intentionally re-enabled.
+import { LOCAL_AI_UI_ENABLED } from "./features/localAi/uiFlag.js";
+if (LOCAL_AI_UI_ENABLED) {
+  import("./features/localAi/index.jsx")
+    .then((mod) => {
+      const mount = mod.mountLocalAiSidecar;
+      if (typeof mount === "function") mount();
+    })
+    .catch((err) => console.warn("[oriex] local AI sidecar failed to mount", err));
+}
 
 // 5) PWA service worker. Registered exactly once, PRODUCTION only, after the
 //    window load event, and never allowed to break the app (failures are only

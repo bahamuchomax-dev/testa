@@ -16,3 +16,55 @@
 .rx-rec .ic,
 .rx-rec-s .ic { background: var(--accent-soft, #ffe9e2); }
 .rx-frame-chip span { background: var(--accent, #ff7a59); }
+
+/* ── selected subject card readability (legacy-safe override) ──
+   oxHelpers marks only 英単語/熟語/漢字/化学/古文 card buttons with
+   data-ox-subject-card. Keep both selected and unselected cards on a white
+   surface so the selected state never becomes a transparent outline. */
+button[data-ox-subject-card]{
+  background:rgba(255,255,255,.86)!important;
+  border:1px solid rgba(15,23,42,.10)!important;
+  box-shadow:0 1px 4px rgba(34,27,21,.08)!important;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+button[data-ox-subject-card]>span:first-child{
+  background:var(--ox-subject-soft,#ffe9e2)!important;
+}
+button[data-ox-subject-card]>span:nth-child(2){
+  color:var(--ink,#2b2724)!important;
+}
+button[data-ox-subject-card]>span:last-child{
+  background:color-mix(in srgb,var(--ox-subject-accent,#ff7a59) 35%,transparent)!important;
+}
+button[data-ox-subject-card][data-ox-subject-selected="true"]{
+  background:rgba(255,255,255,.94)!important;
+  border:1.5px solid color-mix(in srgb,var(--ox-subject-accent,#ff7a59) 72%,rgba(255,255,255,.45))!important;
+  box-shadow:0 4px 14px color-mix(in srgb,var(--ox-subject-accent,#ff7a59) 22%,transparent)!important;
+}
+button[data-ox-subject-card][data-ox-subject-selected="true"]>span:first-child{
+  background:#fff!important;
+  color:var(--ox-subject-accent,#ff7a59)!important;
+  box-shadow:0 1px 6px color-mix(in srgb,var(--ox-subject-accent,#ff7a59) 24%,transparent)!important;
+}
+button[data-ox-subject-card][data-ox-subject-selected="true"]>span:first-child svg,
+button[data-ox-subject-card][data-ox-subject-selected="true"]>span:first-child svg *{
+  stroke:var(--ox-subject-accent,#ff7a59)!important;
+}
+button[data-ox-subject-card][data-ox-subject-selected="true"]>span:first-child svg [fill]:not([fill="none"]){
+  fill:color-mix(in srgb,var(--ox-subject-accent,#ff7a59) 22%,#fff)!important;
+}
+button[data-ox-subject-card][data-ox-subject-selected="true"]>span:nth-child(2){
+  color:var(--ox-subject-accent,#ff7a59)!important;
+  font-weight:800!important;
+}
+button[data-ox-subject-card][data-ox-subject-selected="true"]>span:last-child{
+  width:18px!important;
+  background:var(--ox-subject-accent,#ff7a59)!important;
+}
+body.oxbg-on button[data-ox-subject-card]{
+  background:rgba(255,255,255,.90)!important;
+}
+body.oxbg-on button[data-ox-subject-card][data-ox-subject-selected="true"]{
+  background:rgba(255,255,255,.96)!important;
+}

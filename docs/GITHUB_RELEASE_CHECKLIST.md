@@ -59,7 +59,7 @@ grep -RInE "api\.openai\.com|api\.anthropic\.com|generativelanguage\.googleapis\
 - [ ] ハムスター3Dが表示され、操作できる。
 - [ ] テーマ写真を選択、反映、再読み込み復元、削除できる。
 - [ ] アバターを選択、保存、再読み込み復元、削除できる。
-- [ ] ローカルAI画面で Ollama localhost 接続だけが許可される。
+- [ ] 通常画面にローカルAIの浮遊ボタン/タブが表示されない。再有効化時は Ollama localhost 接続だけが許可されることを確認する。
 
 ## 6. XSS 簡易確認
 

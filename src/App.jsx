@@ -10,8 +10,6 @@ import TeacherProblems from "./features/teacher/TeacherProblems.jsx";
 // Heavy 3D screen is code-split so it (and three.js usage) stays out of the
 // initial bundle — matches the reference note about lazy-loading heavy views.
 const HamsterRoom = lazy(() => import("./features/hamster/HamsterRoom.jsx"));
-// Local AI screen (Ollama only). Lazy so pdfjs/AI code stays out of the initial bundle.
-const LocalAiPage = lazy(() => import("./features/localAi/index.jsx"));
 
 /* ============================================================
  * App — shell that hosts the migrated screens
@@ -31,7 +29,6 @@ const TABS = [
   { id: "review", label: "復習" },
   { id: "factory", label: "単語" },
   { id: "hamster", label: "部屋" },
-  { id: "localai", label: "AI" },
   { id: "profile", label: "マイ" },
 ];
 
@@ -61,11 +58,8 @@ export default function App() {
         </div>
       )}
 
-      {tab === "localai" && (
-        <Suspense fallback={<div className="rx-home"><div className="rx-trow-ls">読み込み中…</div></div>}>
-          <LocalAiPage />
-        </Suspense>
-      )}
+      {/* Local AI UI is temporarily paused. Keep src/features/localAi intact;
+          restore LOCAL_AI_UI_ENABLED and a lazy route here when re-enabling. */}
 
       <nav className="rx-tabbar">
         {TABS.map((t) => (
