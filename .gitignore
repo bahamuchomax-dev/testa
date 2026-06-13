@@ -1,0 +1,25 @@
+node_modules
+dist
+dist-ssr
+*.local
+.env
+.env.local
+.DS_Store
+.vite
+coverage
+.cache
+
+# Do NOT commit large generated/legacy artifacts if you regenerate them:
+# (kept in-tree here on purpose so the app runs out of the box)
+# src/legacy/oriex-app.bundle.js
+
+# Secrets — never commit (enforced by `npm run security:scan` + docs/SECRET_AUDIT.md)
+.env
+.env.local
+.env.*.local
+serviceAccount*.json
+*service-account*.json
+firebase-adminsdk*.json
+dist/
+node_modules/
+.DS_Store

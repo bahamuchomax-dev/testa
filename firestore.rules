@@ -1,0 +1,190 @@
+rules_version = '2';
+
+/* ============================================================
+ * Oriex Firestore Security Rules — pre-production hardened (through stage 4.6)
+ * ------------------------------------------------------------
+ * Roles come from SERVER-SET custom claims (request.auth.token.*),
+ * NOT from client-writable fields. Only an admin (Admin SDK / a
+ * Cloud Function gated by admin) sets `teacher` / `admin` claims, so
+ * a student can never grant themselves teacher rights from the client.
+ *
+ * Hardening in this stage:
+ *   - profiles: self writes are WHITELISTED (hasOnly), so a student
+ *     cannot invent fields like `teacherOnlyNote` / `internalMemo`.
+ *   - records/bookLogs: data.userId MUST equal the signed-in uid AND the
+ *     path owner; fields are whitelisted.
+ *   - users/{u}/deliveredProblems: only the ASSIGNED teacher (teaches(u))
+ *     or admin may write, data.userId must equal {u}, and answer-bearing
+ *     fields are forbidden on student-visible docs.
+ *   - teacherProblemAnswers: READ POLICY = A — a teacher may read ONLY the
+ *     answers they own (resource.data.teacherId == them) or an admin; a
+ *     student's OTHER teachers may NOT read them, even for an assigned
+ *     student. Students can NEVER read answers.
+ *   - top-level deliveredProblems: read limited to teacher/admin; delete is
+ *     owner-limited; admin is NOT exempt from the answer-field ban.
+ *
+ * Data layout (see src/services/repository/paths.js):
+ *   profiles/{uid}                         role/isTeacher/teacherId admin-only
+ *   users/{uid}/records/{id}               own study records
+ *   users/{uid}/bookLogs/{id}              own reading logs
+ *   users/{uid}/deliveredProblems/{id}     delivered problems (NO answers)
+ *   public/data/teacherProblems/{id}       global broadcast (NO answers)
+ *   deliveredProblems/{id}                  teacher/admin only (NO answers)
+ *   teacherProblemAnswers/{id}             answers — owning teacher/admin ONLY
+ *                                          (REQUIRES teacherId; studentUid optional)
+ *   teacherAllowlist/{uid}                  admin-only; not listable
+ *
+ * NOTE: teaches() uses get() (1 document read) to check assignment.
+ * It only runs on teacher/admin access to a student's data, which is
+ * infrequent, so the extra read is acceptable.
+ * ============================================================ */
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isSelf(u) { return signedIn() && request.auth.uid == u; }
+    function isTeacher() {
+      return signedIn() && (request.auth.token.teacher == true || request.auth.token.admin == true);
+    }
+    function isAdmin() { return signedIn() && request.auth.token.admin == true; }
+
+    function teaches(studentUid) {
+      return isTeacher()
+        && get(/databases/$(database)/documents/profiles/$(studentUid)).data.teacherId == request.auth.uid;
+    }
+
+    // student-visible docs may never carry answer/solution fields
+    function noAnswerFields() {
+      return !request.resource.data.keys()
+        .hasAny(['answer', 'correctAnswer', 'explanation', 'solution', 'answerKey', 'answers']);
+    }
+    // the row's userId must equal the signed-in user
+    function ownsRow() {
+      return request.resource.data.userId == request.auth.uid;
+    }
+
+    // ---------------- profiles ----------------
+    match /profiles/{u} {
+      allow get: if isSelf(u) || isAdmin()
+                 || (isTeacher() && resource.data.teacherId == request.auth.uid);
+      // teacher may list ONLY their own students, and only bounded queries
+      allow list: if isAdmin()
+                  || (isTeacher()
+                      && request.query.limit <= 100
+                      && resource.data.teacherId == request.auth.uid);
+      // self create/update are WHITELISTED — role/isTeacher/teacherId/admin and
+      // any unknown field (teacherOnlyNote, internalMemo, …) are rejected.
+      allow create: if isSelf(u)
+                    && request.resource.data.keys()
+                       .hasOnly(['name', 'bio', 'avatar', 'avatarUrl', 'theme', 'createdAt', 'updatedAt']);
+      allow update: if isAdmin()
+                    || (isSelf(u)
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                           .hasOnly(['name', 'bio', 'avatar', 'avatarUrl', 'theme', 'updatedAt']));
+      allow delete: if isAdmin();
+    }
+
+    // ---------------- own study records ----------------
+    match /users/{u}/records/{id} {
+      allow read:   if isSelf(u) || isAdmin() || teaches(u);
+      allow create: if isSelf(u) && ownsRow()
+                    && request.resource.data.keys()
+                       .hasOnly(['userId', 'minutes', 'subject', 'source', 'createdAt', 'updatedAt']);
+      allow update: if isSelf(u) && ownsRow()
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['minutes', 'subject', 'source', 'updatedAt']);
+      allow delete: if isSelf(u) || isAdmin();
+    }
+
+    // ---------------- own reading logs ----------------
+    match /users/{u}/bookLogs/{id} {
+      allow read:   if isSelf(u) || isAdmin() || teaches(u);
+      allow create: if isSelf(u) && ownsRow()
+                    && request.resource.data.keys()
+                       .hasOnly(['userId', 'title', 'minutes', 'bookId', 'createdAt', 'updatedAt']);
+      allow update: if isSelf(u) && ownsRow()
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['title', 'minutes', 'bookId', 'updatedAt']);
+      allow delete: if isSelf(u) || isAdmin();
+    }
+
+    // ---------------- delivered problems (NO answers) ----------------
+    // Student reads own inbox; only the ASSIGNED teacher (or admin) writes,
+    // the row must be addressed to {u}, and answer fields are forbidden.
+    // teacherId policy = B: this per-student doc does NOT carry teacherId (it
+    // is not in the whitelist, so it cannot be set/spoofed). The writer is
+    // already pinned to the assigned teacher via teaches(u), and userId == u.
+    match /users/{u}/deliveredProblems/{id} {
+      allow read:   if isSelf(u) || isAdmin() || teaches(u);
+      allow create, update: if (isAdmin() || teaches(u))
+                            && request.resource.data.userId == u
+                            && noAnswerFields()
+                            && request.resource.data.keys()
+                               .hasOnly(['userId', 'title', 'body', 'subject', 'problemId', 'createdAt', 'updatedAt']);
+      allow delete: if isAdmin() || teaches(u);
+    }
+
+    // ---------------- global broadcast (NO answers) ----------------
+    // admin exception ONLY relaxes the teacherId==self check; answer-field ban
+    // and the field whitelist always apply (even for admin). Delete is owner-only.
+    match /public/data/teacherProblems/{id} {
+      allow read:  if signedIn();
+      allow create, update: if (isAdmin() || (isTeacher() && request.resource.data.teacherId == request.auth.uid))
+                            && noAnswerFields()
+                            && request.resource.data.keys()
+                               .hasOnly(['title', 'body', 'subject', 'teacherId', 'createdAt', 'updatedAt']);
+      allow delete: if isAdmin() || (isTeacher() && resource.data.teacherId == request.auth.uid);
+    }
+
+    // ---------------- top-level public problem parts ----------------
+    // Students read their copies via users/{uid}/deliveredProblems, so this
+    // collection is teacher/admin only and still answer-free. A non-admin
+    // teacher must stamp their OWN uid as teacherId (no spoofing); admin may
+    // use any teacherId but still cannot include answers. Delete is owner-only.
+    match /deliveredProblems/{id} {
+      allow read:  if isTeacher();
+      allow create, update: if (isAdmin() || (isTeacher() && request.resource.data.teacherId == request.auth.uid))
+                            && noAnswerFields()
+                            && request.resource.data.keys()
+                               .hasOnly(['title', 'body', 'subject', 'teacherId', 'createdAt', 'updatedAt']);
+      allow delete: if isAdmin() || (isTeacher() && resource.data.teacherId == request.auth.uid);
+    }
+
+    // ---------------- ANSWERS: owning teacher / admin ONLY ----------------
+    // Students can NEVER read. READ POLICY = A (most strict): only the OWNING
+    // teacher (teacherId == them) or an admin may read — NOT a student's other
+    // teachers, even for an assigned student. Writes still bind teacherId to
+    // the writer and (if studentUid present) require an assigned student.
+    match /teacherProblemAnswers/{id} {
+      allow read:   if isAdmin()
+                    || (isTeacher() && resource.data.teacherId == request.auth.uid);
+      allow create: if isAdmin()
+                    || (isTeacher()
+                        && request.resource.data.teacherId == request.auth.uid
+                        && (!('studentUid' in request.resource.data) || teaches(request.resource.data.studentUid))
+                        && request.resource.data.keys()
+                           .hasOnly(['teacherId', 'studentUid', 'problemId', 'answer', 'score', 'feedback', 'createdAt', 'updatedAt']));
+      allow update: if isAdmin()
+                    || (isTeacher()
+                        && resource.data.teacherId == request.auth.uid
+                        && request.resource.data.teacherId == request.auth.uid
+                        && (!('studentUid' in request.resource.data) || teaches(request.resource.data.studentUid))
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                           .hasOnly(['answer', 'score', 'feedback', 'problemId', 'studentUid', 'updatedAt']));
+      allow delete: if isAdmin()
+                    || (isTeacher() && resource.data.teacherId == request.auth.uid);
+    }
+
+    // ---------------- teacher allowlist: admin-only, not listable ----------------
+    match /teacherAllowlist/{u} {
+      allow get:   if isAdmin() || isSelf(u); // a user may check own status only
+      allow list:  if false;                  // never enumerate the allowlist
+      allow write: if isAdmin();               // only admins grant/revoke teacher rights
+    }
+
+    // ---------------- default deny ----------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,453 @@
+/* ============================================================
+ * localAi.css — ローカルAI機能のスタイル
+ * 既存Oriexのトークン(--accent/--card/--ink/--line/...)を使い、
+ * 単体（テーマ未適用）でも崩れないようフォールバック値を付ける。
+ * クラスは .lai- 接頭辞で既存スタイルと衝突させない。
+ * ============================================================ */
+
+.lai-root {
+  --lai-accent: var(--accent, #ff7a59);
+  --lai-accent-soft: var(--accent-soft, #ffe9e1);
+  --lai-card: var(--card, #ffffff);
+  --lai-ink: var(--ink, #2b2724);
+  --lai-ink-soft: var(--ink-soft, #6f655a);
+  --lai-line: var(--line, #ece3d8);
+}
+
+/* ヘッダー / 接続情報 */
+.lai-head {
+  background: var(--lai-card);
+  border: 1px solid var(--lai-line);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(43, 39, 36, 0.06);
+}
+.lai-head h2 {
+  margin: 0;
+  font-family: "Zen Maru Gothic", sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--lai-ink);
+}
+.lai-disc {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--lai-ink-soft);
+}
+.lai-kv {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--lai-ink-soft);
+}
+.lai-kv code {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color: var(--lai-ink);
+  background: var(--lai-accent-soft);
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+/* 接続ステータスのピル */
+.lai-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+.lai-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  font-family: "Zen Maru Gothic", sans-serif;
+  border: 1px solid var(--lai-line);
+  background: var(--lai-card);
+  color: var(--lai-ink-soft);
+}
+.lai-pill .dot { width: 8px; height: 8px; border-radius: 999px; background: currentColor; flex: none; }
+.lai-pill.ok { color: #15803d; border-color: #bbe7c6; background: #eafaef; }
+.lai-pill.warn { color: #b45309; border-color: #f0d6a8; background: #fdf4e3; }
+.lai-pill.err { color: #b91c1c; border-color: #efc0bb; background: #fdeceb; }
+.lai-pill.idle { color: var(--lai-ink-soft); }
+
+/* タブ（横スクロール）。app.css の .rx-cats/.rx-cat を併用してもよい */
+.lai-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 14px 2px 4px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.lai-tabs::-webkit-scrollbar { display: none; }
+.lai-tab {
+  flex: none;
+  border: 1px solid var(--lai-line);
+  background: var(--lai-card);
+  color: var(--lai-ink-soft);
+  border-radius: 999px;
+  padding: 9px 15px;
+  font-family: "Zen Maru Gothic", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.lai-tab.on {
+  background: var(--lai-accent);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--lai-accent) 32%, transparent);
+}
+
+/* 機能パネル */
+.lai-panel { margin-top: 12px; }
+.lai-panel-h {
+  font-family: "Zen Maru Gothic", sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--lai-ink);
+  margin: 4px 2px 2px;
+}
+.lai-panel-sub {
+  font-size: 12px;
+  color: var(--lai-ink-soft);
+  margin: 0 2px 10px;
+  line-height: 1.6;
+}
+.lai-field { margin-top: 10px; }
+.lai-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--lai-ink-soft);
+  margin: 0 2px 6px;
+}
+.lai-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.lai-row > * { flex: 1 1 130px; min-width: 0; }
+
+textarea.lai-area {
+  min-height: 130px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+/* アクションボタン */
+.lai-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.lai-btn {
+  border: 1px solid var(--lai-line);
+  background: var(--lai-card);
+  color: var(--lai-ink);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-family: "Zen Maru Gothic", sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.lai-btn:active { transform: scale(0.98); }
+.lai-btn.primary {
+  background: var(--lai-accent);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--lai-accent) 30%, transparent);
+}
+.lai-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.lai-btn.ghost { background: transparent; }
+
+/* 出力パネル（コピーできるよう選択可） */
+.lai-out {
+  margin-top: 14px;
+  background: var(--lai-card);
+  border: 1px solid var(--lai-line);
+  border-radius: 16px;
+  padding: 14px 16px;
+  box-shadow: 0 6px 18px rgba(43, 39, 36, 0.06);
+  user-select: text;
+  -webkit-user-select: text;
+}
+.lai-out.text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--lai-ink);
+}
+.lai-note {
+  font-size: 12px;
+  color: var(--lai-ink-soft);
+  margin-bottom: 8px;
+}
+.lai-err {
+  margin-top: 10px;
+  background: #fdeceb;
+  border: 1px solid #efc0bb;
+  color: #b91c1c;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* 構造化出力（復習提案・カルテ・小テスト・PDF問題） */
+.lai-block { margin-top: 10px; }
+.lai-block h4 {
+  margin: 0 0 6px;
+  font-family: "Zen Maru Gothic", sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--lai-ink);
+}
+.lai-block ul { margin: 0; padding-left: 18px; }
+.lai-block li { font-size: 13px; line-height: 1.7; color: var(--lai-ink); }
+.lai-prio { display: flex; flex-direction: column; gap: 6px; }
+.lai-prio-row { display: flex; gap: 8px; align-items: baseline; font-size: 13px; color: var(--lai-ink); }
+.lai-lv {
+  flex: none;
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: var(--lai-accent-soft);
+  color: var(--lai-accent);
+}
+.lai-q {
+  border-top: 1px solid var(--lai-line);
+  padding: 10px 0;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--lai-ink);
+}
+.lai-q:first-child { border-top: none; }
+.lai-choices { margin: 4px 0 0; padding-left: 18px; }
+.lai-ans { color: var(--lai-ink-soft); font-size: 12.5px; margin-top: 4px; }
+.lai-answerkey { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--lai-line); }
+
+/* スピナー */
+.lai-spin {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border: 2px solid var(--lai-accent-soft);
+  border-top-color: var(--lai-accent);
+  border-radius: 50%;
+  animation: laiSpin 0.8s linear infinite;
+  vertical-align: -3px;
+  margin-right: 8px;
+}
+@keyframes laiSpin { to { transform: rotate(1turn); } }
+
+/* PDFページプレビュー */
+.lai-pages { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; max-height: 220px; overflow: auto; }
+.lai-page {
+  border: 1px solid var(--lai-line);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--lai-ink-soft);
+  background: var(--lai-card);
+}
+.lai-page b { color: var(--lai-ink); }
+
+/* 設定（折りたたみ） */
+.lai-settings { margin-top: 12px; border-top: 1px solid var(--lai-line); padding-top: 12px; }
+.lai-warn-inline { font-size: 12px; margin-top: 6px; line-height: 1.6; }
+.lai-warn-inline.warn { color: #b45309; }
+.lai-warn-inline.err { color: #b91c1c; }
+.lai-warn-inline.ok { color: #15803d; }
+
+/* ---- サイドカー（現行アプリに重ねる起動ボタン＋ドロワー） ---- */
+.lai-launch {
+  position: fixed;
+  right: 16px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 96px);
+  z-index: 9000;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 16px;
+  background: var(--accent, #ff7a59);
+  color: #fff;
+  font-family: "Zen Maru Gothic", sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.lai-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9100;
+  background: rgba(0, 0, 0, 0.42);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.lai-drawer {
+  width: 100%;
+  max-width: 560px;
+  max-height: 92vh;
+  overflow-y: auto;
+  background: var(--bg, linear-gradient(170deg, #fff8f4 0%, #fdede6 52%, #f5ddd0 100%));
+  border-radius: 22px 22px 0 0;
+  padding: 14px 16px calc(env(safe-area-inset-bottom, 0px) + 20px);
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.25);
+  scrollbar-width: none;
+}
+.lai-drawer::-webkit-scrollbar { display: none; }
+.lai-drawer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 0 10px;
+}
+.lai-close {
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--ink-soft, #6f655a);
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lai-spin { animation: none; }
+}
+
+/* ============================================================
+ * v5-4: 品質バッジカード / 根拠表示 / 問題別警告 / 報告書本文
+ * 既存トークンを使い、白カード＋淡い色帯で控えめに（発光なし）。
+ * ============================================================ */
+
+/* 品質チェックのカード */
+.lai-qa {
+  margin-top: 12px;
+  background: var(--lai-card);
+  border: 1px solid var(--lai-line);
+  border-left: 4px solid var(--lai-line);
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 14px rgba(43, 39, 36, 0.05);
+}
+.lai-qa-usable { border-left-color: #57b777; background: #fbfdfb; }
+.lai-qa-caution { border-left-color: #e0a64e; background: #fffdf8; }
+.lai-qa-blocked { border-left-color: #d97a72; background: #fffafa; }
+.lai-qa-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.lai-qa-score {
+  font-family: "Zen Maru Gothic", sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--lai-ink);
+}
+.lai-qa-line {
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--lai-ink);
+}
+.lai-qa-major {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+.lai-qa-major li {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #b91c1c;
+}
+.lai-qa-minor {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+.lai-qa-minor li {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #b45309;
+}
+.lai-qa-more {
+  margin-top: 8px;
+}
+.lai-qa-more > summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--lai-ink-soft);
+  list-style: none;
+}
+.lai-qa-more > summary::-webkit-details-marker { display: none; }
+.lai-qa-more > summary::before { content: "▸ "; }
+.lai-qa-more[open] > summary::before { content: "▾ "; }
+.lai-qa-det {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--lai-line);
+  font-size: 12px;
+  color: var(--lai-ink-soft);
+}
+
+/* PDF根拠（ページ番号＋引用） */
+.lai-evidence {
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: var(--lai-accent-soft);
+  border-radius: 10px;
+}
+.lai-evidence-page {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--lai-ink-soft);
+  margin-bottom: 2px;
+}
+.lai-evidence-quote {
+  margin: 0;
+  padding: 0 0 0 10px;
+  border-left: 3px solid color-mix(in srgb, var(--lai-accent) 45%, var(--lai-line));
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--lai-ink);
+}
+
+/* 問題ごとの警告（範囲外単語 / 根拠不足など） */
+.lai-q-warn {
+  margin-top: 6px;
+  padding: 5px 10px;
+  border-radius: 9px;
+  font-size: 12px;
+  line-height: 1.55;
+  background: #fdf4e3;
+  border: 1px solid #f0d6a8;
+  color: #b45309;
+}
+.lai-q-warn.err {
+  background: #fdeceb;
+  border-color: #efc0bb;
+  color: #b91c1c;
+}
+
+/* 指導報告書の本文（やや大きめに） */
+.lai-report {
+  font-size: 14.5px;
+  line-height: 1.85;
+}

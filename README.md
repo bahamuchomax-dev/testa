@@ -188,3 +188,38 @@ src/styles/utilities.css
 - 画像PDF/OCRには未対応です。テキスト抽出できるPDFのみ対応します。
 - スマホなど別端末のブラウザから、LAN上のPCで動く Ollama へ直接送る構成は許可していません。
 - legacy bundle 内に残る画面は段階的移行中です。直接編集せず、React 移行時に `src/features/` と `src/services/` 側へ寄せます。
+
+## GitHub での公開と CI / Pages
+
+このリポジトリには GitHub 用のワークフローが含まれています（`.github/workflows/`）。
+
+- `ci.yml` … `push`（main）と Pull Request で `npm ci → lint → test → security:scan → build → npm audit` を自動実行します。秘密情報スキャン（`security:scan`）も CI で必ず走ります。
+- `deploy-pages.yml` … main への push で Vite ビルドを GitHub Pages へ自動デプロイします。`vite` の `base: "./"` によりプロジェクトのサブパス配信でもアセットが解決されます。
+
+### 初回プッシュ
+
+```bash
+git init
+git add .
+git commit -m "Initial commit: Oriex"
+git branch -M main
+git remote add origin https://github.com/<ユーザー名>/<リポジトリ名>.git
+git push -u origin main
+```
+
+### GitHub Pages を有効化（Actions デプロイを使う場合）
+
+リポジトリの **Settings → Pages → Build and deployment → Source** を **「GitHub Actions」** に設定します。以後、main への push で自動デプロイされます。手動で `dist/` をアップロードする運用を続ける場合は `deploy-pages.yml` を使わなくても構いません。
+
+### 公開前チェック（ローカル）
+
+```bash
+npm ci
+npm run lint
+npm run test
+npm run security:scan   # 秘密鍵 / Service Account / 外部AIキー混入チェック
+npm run build
+npm audit
+```
+
+> 秘密情報の扱いは `docs/SECRET_AUDIT.md` を参照してください。Firebase Web の `apiKey` はフロントに含まれてよい識別子（スキャンは WARN）で、Service Account の秘密鍵（private key）は厳禁（FAIL）です。**配布 ZIP 自体の実物確認は別レビューで行ってください。**
