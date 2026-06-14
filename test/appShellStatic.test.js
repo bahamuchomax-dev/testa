@@ -6,6 +6,7 @@ import { readFileSync } from "node:fs";
 
 const MAIN = readFileSync("src/main.jsx", "utf8");
 const INDEX_HTML = readFileSync("index.html", "utf8");
+const SW = readFileSync("public/sw.js", "utf8");
 const MANIFEST = JSON.parse(readFileSync("public/manifest.webmanifest", "utf8"));
 const PDF_PANEL = readFileSync("src/features/localAi/panels/PdfQuestionPanel.jsx", "utf8");
 
@@ -33,6 +34,15 @@ describe("PWA theme-color consistency", () => {
     const htmlColor = m[1].trim().toLowerCase();
     const manifestColor = String(MANIFEST.theme_color).trim().toLowerCase();
     expect(htmlColor).toBe(manifestColor);
+  });
+});
+
+describe("service worker cache scope", () => {
+  it("caches same-origin static assets without intercepting every same-origin GET", () => {
+    expect(SW).toContain("function isStaticAssetRequest");
+    expect(SW).toContain("req.destination");
+    expect(SW).toContain("isStaticAssetRequest(req, url)");
+    expect(SW).not.toMatch(/if\s*\(\s*url\.origin\s*===\s*self\.location\.origin\s*\)\s*\{\s*e\.respondWith\(swr\(SHELL,\s*req\)\)/);
   });
 });
 

@@ -64,13 +64,31 @@ describe("sanitizeUrl", () => {
     expect(sanitizeUrl("data:text/html,<script>alert(1)</script>")).toBe("");
     expect(sanitizeUrl("data:image/png;base64,AAAA")).toBe("");
   });
-  it("allows http(s), mailto, tel, blob, relative and fragments", () => {
+  it("blocks protocol-relative and UNC-style URLs", () => {
+    expect(sanitizeUrl("//evil.example/x")).toBe("");
+    expect(sanitizeUrl("\\\\evil.example\\x")).toBe("");
+  });
+  it("allows http(s), mailto, tel, relative and fragments", () => {
     expect(sanitizeUrl("https://example.com/x")).toBe("https://example.com/x");
     expect(sanitizeUrl("http://localhost:11434")).toBe("http://localhost:11434");
     expect(sanitizeUrl("mailto:a@b.com")).toBe("mailto:a@b.com");
+    expect(sanitizeUrl("tel:+810000000000")).toBe("tel:+810000000000");
     expect(sanitizeUrl("/relative/path")).toBe("/relative/path");
     expect(sanitizeUrl("#frag")).toBe("#frag");
-    expect(sanitizeUrl("blob:https://x/y")).toBe("blob:https://x/y");
+  });
+  it("allows only same-origin blob URLs", () => {
+    const previous = Object.getOwnPropertyDescriptor(globalThis, "location");
+    Object.defineProperty(globalThis, "location", {
+      value: { origin: "https://oriex.example" },
+      configurable: true,
+    });
+    try {
+      expect(sanitizeUrl("blob:https://evil.example/y")).toBe("");
+      expect(sanitizeUrl("blob:https://oriex.example/y")).toBe("blob:https://oriex.example/y");
+    } finally {
+      if (previous) Object.defineProperty(globalThis, "location", previous);
+      else delete globalThis.location;
+    }
   });
 });
 

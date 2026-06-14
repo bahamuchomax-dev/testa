@@ -13,6 +13,10 @@ describe("secret-scan tooling exists", () => {
   it("package.json has a security:scan script", () => {
     expect(PKG.scripts && PKG.scripts["security:scan"]).toBe("node scripts/securityScan.mjs");
   });
+  it("scans GitHub workflow files too", () => {
+    const scanner = readFileSync("scripts/securityScan.mjs", "utf8");
+    expect(scanner).toContain('".github"');
+  });
 });
 
 describe(".gitignore covers secrets", () => {
@@ -47,7 +51,7 @@ function walk(dir, acc = []) {
   }
   return acc;
 }
-const SRC_PUB_TEST = [...walk("src"), ...walk("public"), ...walk("test")];
+const SRC_PUB_TEST = [...walk("src"), ...walk("public"), ...walk("test"), ...walk(".github")];
 
 describe("no secret material in src / public / test", () => {
   it("contains no private_key or firebase-adminsdk tokens", () => {

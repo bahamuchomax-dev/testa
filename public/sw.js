@@ -2,7 +2,7 @@
    Strategy:
    - navigations (HTML): network-first, fall back to cached app when offline
    - Google Fonts: stale-while-revalidate (works offline after first load)
-   - same-origin GET (manifest, etc.): stale-while-revalidate
+   - same-origin static assets (manifest, scripts, images, fonts): stale-while-revalidate
    - everything else (Firestore/Firebase/Google APIs): not intercepted -> normal network
 */
 var VERSION = 'v7.36-hamspawn';
@@ -45,6 +45,15 @@ function swr(cacheName, req) {
   });
 }
 
+function isStaticAssetRequest(req, url) {
+  if (url.origin !== self.location.origin) return false;
+  if (url.pathname.indexOf('/__/') !== -1) return false;
+  if (req.destination && ['script', 'style', 'image', 'font', 'manifest', 'worker'].indexOf(req.destination) !== -1) {
+    return true;
+  }
+  return /\.(?:html|css|js|mjs|png|jpg|jpeg|gif|webp|svg|ico|json|webmanifest|woff2?|ttf|otf)$/i.test(url.pathname);
+}
+
 self.addEventListener('fetch', function (e) {
   var req = e.request;
   if (req.method !== 'GET') return;
@@ -75,8 +84,8 @@ self.addEventListener('fetch', function (e) {
     return;
   }
 
-  // Same-origin static assets: stale-while-revalidate
-  if (url.origin === self.location.origin) {
+  // Same-origin static assets only: stale-while-revalidate
+  if (isStaticAssetRequest(req, url)) {
     e.respondWith(swr(SHELL, req));
     return;
   }

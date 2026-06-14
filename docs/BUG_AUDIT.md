@@ -1,5 +1,12 @@
 # BUG_AUDIT
 
+## Security hardening (2026-06-14)
+- [x] `sanitizeUrl` blocks protocol-relative (`//host`) and UNC-style (`\\host`) URLs so attacker-controlled values cannot bypass the scheme allow-list.
+- [x] `sanitizeUrl` keeps `blob:` support only for same-origin blob URLs; external-origin blob URLs are rejected.
+- [x] `public/sw.js` caches only same-origin static assets instead of every same-origin GET response.
+- [x] `npm run security:scan` now includes `.github` workflow files.
+- [ ] Legacy bundle still contains historical DOM/password-flow risk markers and should be migrated or retired in a future phase; the bundle was not edited directly.
+
 バグ修正フェーズ第1段階：実機確認とバグ一覧化。
 
 ## GitHub 公開前最終整理（README / docs）

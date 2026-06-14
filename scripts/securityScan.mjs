@@ -30,7 +30,7 @@ import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join, relative, sep, extname } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const TARGET_DIRS = ["src", "public", "test", "docs"];
+const TARGET_DIRS = ["src", "public", "test", "docs", ".github"];
 const TARGET_FILES = [
   "package.json",
   "package-lock.json",
