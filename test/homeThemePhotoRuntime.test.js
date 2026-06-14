@@ -279,6 +279,20 @@ describe("theme photo runtime helper", () => {
     expect(css).toContain("body.oxbg-on #root{position:relative!important;z-index:1!important;background:transparent!important}");
   });
 
+  it("injects CSS that restores readable card surfaces over theme photos", async () => {
+    const { bg, document } = await installOxBg();
+    await bg.setPhoto(new Blob([new Uint8Array([5])], { type: "image/jpeg" }));
+
+    const css = document.getElementById("oxbg-css").textContent;
+    expect(css).toContain("body.oxbg-on .rx-peek,");
+    expect(css).toContain("body.oxbg-on .rx-rec-s,");
+    expect(css).toContain("body.oxbg-on .rx-tabbar,");
+    expect(css).toContain("body.oxbg-on .rx-calendar-grid,");
+    expect(css).toContain('body.oxbg-on [class*="rounded"][style*="rgba(255,255,255,0.05)"]');
+    expect(css).toContain("background:rgba(255,255,255,.88)!important");
+    expect(css).toContain("backdrop-filter:blur(10px)");
+  });
+
   it("restores the photo from IndexedDB on startup and afterTheme reapplies CSS", async () => {
     const indexedDB = makeFakeIndexedDB();
     const localStorage = makeLocalStorage();
