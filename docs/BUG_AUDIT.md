@@ -16,6 +16,13 @@
 - [x] Local AI UI remains paused through `LOCAL_AI_UI_ENABLED = false`; the dynamic sidecar import is still guarded.
 - [ ] GitHub Pages Settings should still be switched to Source = `GitHub Actions`; the root-source fallback is a safety net, not the preferred deployment path.
 
+## React migration phase 0 inventory (2026-06-14)
+- [x] Confirmed `src/main.js` is still the live entry and still boots `src/legacy/oriex-app.bundle.js`; `src/App.jsx` is not mounted.
+- [x] Documented the current legacy-owned screens, existing React scaffolds, unmounted React surfaces, risk points, and recommended migration order in `docs/REACT_MIGRATION_PLAN.md`.
+- [x] Kept Local AI UI paused. `LOCAL_AI_UI_ENABLED` remains `false`, `localai` is not in `App.jsx` tabs, and the implementation remains in `src/features/localAi/`.
+- [x] Added static tests that guard the phase 0 plan, legacy entry, App scaffold status, migration order, legacy no-direct-edit rule, and local AI pause.
+- [ ] No screen was migrated in this phase. The next safe live migration target is Profile.
+
 ## Firebase read hardening (2026-06-14)
 - [x] Other bug checks focused on Firebase/read paths, repository guardrails, polling, and non-legacy dangerous read patterns.
 - [x] `readCache` now deduplicates same-key in-flight reads, so two screens requesting the same Firestore target at the same moment share one fetch.

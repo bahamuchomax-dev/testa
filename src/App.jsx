@@ -12,14 +12,14 @@ import TeacherProblems from "./features/teacher/TeacherProblems.jsx";
 const HamsterRoom = lazy(() => import("./features/hamster/HamsterRoom.jsx"));
 
 /* ============================================================
- * App — shell that hosts the migrated screens
+ * App - React migration scaffold that hosts migrated screens
  * ------------------------------------------------------------
  * This is the target root for the React/Vite rebuild. It is NOT yet mounted:
  * src/main.js still boots the original production bundle so the live app
  * keeps working untouched. Migration flips one screen at a time — render the
  * real component here, delete that screen from the bundle, repeat. When every
  * tab is migrated, point main.js at this file and drop src/legacy entirely.
- * See MIGRATION.md.
+ * See docs/REACT_MIGRATION_PLAN.md.
  *
  * Navigation reuses the existing .rx-tabbar styling.
  * ============================================================ */

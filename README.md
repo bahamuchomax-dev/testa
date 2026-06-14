@@ -163,6 +163,7 @@ scripts/securityScan.mjs と test/secretScanStatic.test.js は NAME 免除のみ
 - [docs/SECRET_AUDIT.md](./docs/SECRET_AUDIT.md)
 - [docs/BUG_AUDIT.md](./docs/BUG_AUDIT.md)
 - [docs/FIREBASE_READ_AUDIT.md](./docs/FIREBASE_READ_AUDIT.md)
+- [docs/REACT_MIGRATION_PLAN.md](./docs/REACT_MIGRATION_PLAN.md)
 - [docs/LOCAL_AI.md](./docs/LOCAL_AI.md)
 - [docs/GITHUB_RELEASE_CHECKLIST.md](./docs/GITHUB_RELEASE_CHECKLIST.md)
 
