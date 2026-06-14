@@ -33,9 +33,39 @@ function staticSourceAssetBaseUrl() {
 import "./features/hamster/oriexHamu3D.js"; // -> window.OriexHamu3D
 import "./services/oxHelpers.js"; // -> window.__oxBg / __oxPbg / __oxAv / __oxStudy
 
-// The application. Currently the original production build.
-// Screens are being peeled out of here into src/features/*.
-import "./legacy/oriex-app.bundle.js"; // self-mounts the React app into #root
+// Hidden diagnostic route. The embedded-AI device probe is NOT part of the
+// normal app: it opens ONLY when the URL explicitly asks for it
+// (?oriexProbe=embedded-ai or #embedded-ai-probe). This import is the tiny URL
+// matcher only — it pulls in no React, no panel, and no AI code, so normal
+// startup and the initial bundle are unaffected.
+import { isEmbeddedAiProbeUrl } from "./features/embeddedAi/embeddedAiProbeRoute.js";
+
+// The application. Currently the original production build. Screens are being
+// peeled out of here into src/features/*. The legacy bundle self-mounts the
+// React app into <div id="root"> when loaded; the globals above are installed
+// first (static imports), so load order is preserved.
+function startLegacyApp() {
+  return import("./legacy/oriex-app.bundle.js").catch((err) =>
+    console.warn("[oriex] legacy app failed to load", err),
+  );
+}
+
+if (typeof window !== "undefined" && isEmbeddedAiProbeUrl(window.location)) {
+  // Diagnostic-only route: mount the device probe instead of the normal app.
+  // The probe panel + React are a separate lazy chunk, so they never load on a
+  // normal visit. On any failure, fall back to the normal app (no white screen).
+  import("./features/embeddedAi/mountProbe.jsx")
+    .then((mod) => {
+      if (typeof mod.mountEmbeddedAiProbe === "function") mod.mountEmbeddedAiProbe();
+      else startLegacyApp();
+    })
+    .catch((err) => {
+      console.warn("[oriex] embedded AI probe failed to load", err);
+      startLegacyApp();
+    });
+} else {
+  startLegacyApp();
+}
 
 // Local AI (Ollama only) UI is temporarily paused. Keep the implementation in
 // src/features/localAi, but do not load its chunk or show the floating launcher

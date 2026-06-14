@@ -23,6 +23,90 @@
 - [x] Added static tests that guard the phase 0 plan, legacy entry, App scaffold status, migration order, legacy no-direct-edit rule, and local AI pause.
 - [ ] No screen was migrated in this phase. The next safe live migration target is Profile.
 
+## React migration phase 1 Profile preparation (2026-06-14)
+- [x] Adopted the safe phase 1 approach: Profile was prepared inside the unmounted React scaffold; the production entry was not switched to `App.jsx`.
+- [x] Fixed the React Profile save path so it calls `profileRepository.save(profileUid, { name, bio })` instead of leaving the save call inside a comment.
+- [x] Added explicit name/bio `maxLength` props aligned with repository clamps: name 120, bio 4000.
+- [x] Kept `profileRepository.save()` as the only text save path, preserving `sanitizeProfileUpdate`, `sanitizePlainText`, and privileged-field removal.
+- [x] Kept avatar storage on IndexedDB Blob helpers and object URL revoke behavior; no localStorage base64 avatar storage was added.
+- [x] Added uid guards before profile/avatar save/delete actions.
+- [x] Added `test/profileReactMigration.test.js` for static Profile migration safety checks.
+- [ ] The visible legacy profile screen remains live. Manual desktop/mobile checks are still needed before a Profile-only live switch.
+
+## React migration phase 2 Records inventory (2026-06-14)
+- [x] Confirmed `src/features/records/Records.jsx` exists, but the live app still uses the legacy bundle for the visible learning-record screen.
+- [x] Confirmed `src/App.jsx` has a Records branch for the future scaffold, while `records` is not in `TABS` and `src/main.js` still boots legacy.
+- [x] Documented Records migration requirements in `docs/REACT_MIGRATION_PLAN.md`: props, save path, localStorage repository, Firestore read constraints, and manual-check items.
+- [x] Confirmed current editable storage path is `recordsRepository` -> `lsKey.records(uid)` localStorage. Firestore remains disabled/stubbed and no Rules/data structure changes were made.
+- [x] Noted that the manual `subject` field is free text and must receive `sanitizePlainText` plus an explicit `maxLength` before any live switch.
+- [x] Added `test/recordsReactMigration.test.js` to guard legacy entry, hidden Records production navigation, Local AI pause, and Records migration documentation.
+- [ ] Records was not made live. Next phase must implement/test subject sanitize + clamp and verify save/delete/reload/weekly rollup before route exposure.
+
+## React migration phase 3 Records minimal hardening (2026-06-14)
+- [x] Kept the safe approach: Records was hardened inside the unmounted React scaffold; the production entry was not switched to `App.jsx` and `records` was not added to `TABS`.
+- [x] `recordsRepository.add()` now sanitizes the free-text `subject` with `sanitizePlainText` (strips HTML tags + dangerous schemes such as `javascript:`, removes control chars, trims) before persisting; normal Japanese / line breaks are preserved.
+- [x] Added `RECORDS_SUBJECT_MAX_LENGTH = 80` in the repository as the single source of truth; the subject clamp and the `Records.jsx` input `maxLength` both use it so they cannot drift.
+- [x] A whitespace-only subject is stored as `""` (safe default); the UI keeps rendering the `学習` fallback for empty subjects.
+- [x] Added uid guards in `Records.jsx` `submit`/`del` (no uid -> no repository call, error shown). The repository keeps pinning writes/removes to the current user via `assertOwnUid`.
+- [x] Kept `minutes` validation unchanged (`parsePositiveMinutes`: round, reject < 1 / NaN / negatives). No upper bound added on purpose; the recommended Firestore-phase cap (~1440/day) is documented in `docs/REACT_MIGRATION_PLAN.md`.
+- [x] Kept storage on `recordsRepository` -> `lsKey.records(uid)` localStorage. Firestore, Rules, auth, and data structure were not touched. A `TODO(firestore)` marker records the scoped-query + readCache + Rules-emulator-green conditions.
+- [x] Rows still render with plain `{text}`; no `dangerouslySetInnerHTML` / `innerHTML` / `insertAdjacentHTML` / `document.write`.
+- [x] Expanded `test/recordsReactMigration.test.js` with phase 3 static guards plus behavioural unit tests: `<script>`/`<img onerror>`/`javascript:` payloads are neutralised, normal Japanese survives, over-long subjects clamp to 80, whitespace-only subjects become `""`, invalid minutes are rejected, and writes stay uid-scoped.
+- [x] Kept Local AI UI paused, theme-photo/avatar storage, service worker, and three.js lazy loading unchanged.
+- [ ] Records is still not a production route. The next phase decides whether Records is reached from Home only or also as a tab, and verifies save/delete/reload/weekly rollup on desktop + mobile before any route exposure.
+
+## Embedded (on-device) AI experiment phase 1 foundation (2026-06-14)
+- [x] Added an experimental in-browser AI foundation under `src/features/embeddedAi/` without touching the Ollama Local AI track or its paused UI.
+- [x] `EMBEDDED_AI_UI_ENABLED = false`; the experiment is not exposed from normal navigation and is not imported by `src/main.js`, so it adds nothing to startup or the initial bundle.
+- [x] Took the safe option: no AI library dependency was added this phase. Only an abstraction layer (`embeddedAiClient.js`), a non-throwing device probe (`embeddedAiDevice.js`), config/flags (`embeddedAiConfig.js`), and a dev-only panel (`EmbeddedAiExperimentPanel.jsx`).
+- [x] The client is a swappable seam: a real engine is plugged in later via `registerEmbeddedAiEngine(loader)` whose `loader` does a dynamic `import()`, runs only on opt-in, shares one in-flight Promise, and fails gracefully to `{ ok:false }` (no white screen).
+- [x] No external AI API / endpoint / key / `.env` was added. Prompts, student data, and teacher memos are never sent to an external AI API. The feature source names no AI vendor/endpoint.
+- [x] Generated text renders as plain `{text}`; no `dangerouslySetInnerHTML` / `innerHTML`. The experiment input is clamped (800 chars) and long prompts are not stored in `localStorage`.
+- [x] Picked one small use case (today's study memo -> short review suggestion) and documented model-fetch / on-device cache policy in `docs/EMBEDDED_AI_PLAN.md`.
+- [x] Added `test/embeddedAiStatic.test.js` (static guards + behavioural unit tests: default engine-not-bundled, empty-prompt reject, pluggable engine, shared in-flight load, graceful loader failure, clamped prompt).
+- [x] Updated `README.md`, `docs/SECURITY_CHECKLIST.md`, and `docs/REACT_MIGRATION_PLAN.md`.
+- [ ] No engine runs yet (foundation only). Enabling requires choosing an engine that runs on target phones, documenting its model source + on-device cache, a lazy dynamic-import chunk, verified graceful failure on real devices, and a clean external-AI scan.
+
+## Embedded (on-device) AI experiment phase 1.5 src tidy + engine candidate docs (2026-06-14)
+- [x] Moved concrete engine names out of `src/features/embeddedAi/` comments into `docs/EMBEDDED_AI_PLAN.md`; the feature source is now vendor-neutral (`embeddedAiClient.js` and `embeddedAiConfig.js` no longer name WebLLM / Transformers.js / MediaPipe / Ollama). The "register later via `registerEmbeddedAiEngine` + lazy dynamic import on opt-in" policy is kept. No implementation code changed.
+- [x] Added an `## Engine Candidates` comparison (WebLLM-style, Transformers.js-style, MediaPipe LLM Inference-style, and abstraction-only) covering mobile expectation, first-download size, WebGPU/WASM requirements, iPhone/Android differences, PWA fit, "not an external AI API", model-fetch vs input-send, and Oriex-specific cautions — without over-committing.
+- [x] Added a `## Phase 2 Entry Criteria` section (WebGPU/required APIs on real phones, acceptable first-download size, not in initial bundle, lazy dynamic import on opt-in, graceful failure, no prompt/student data to external AI APIs, clean security:scan + external-AI grep, no impact on core features on failure).
+- [x] No real engine, no npm dependency, no model added. `EMBEDDED_AI_UI_ENABLED` stays `false`; embedded AI is still not imported by `src/main.js` / `src/App.jsx` and not shown in normal UI. Ollama implementation and the paused Local AI UI are unchanged.
+- [x] Updated `test/embeddedAiStatic.test.js` with phase 1.5 checks: feature source has no engine/vendor name, no AI API key name, neutral swappable-engine policy, docs contain Engine Candidates + the candidate names + Phase 2 Entry Criteria, and the experiment stays disabled/unimported.
+- [x] Updated `README.md`, `docs/SECURITY_CHECKLIST.md`, and `docs/REACT_MIGRATION_PLAN.md`.
+- [ ] Engine choice still pending real-device investigation in phase 2.
+
+## Embedded (on-device) AI experiment phase 2 device probe (2026-06-14)
+- [x] Added a device-readiness diagnostic (`src/features/embeddedAi/embeddedAiProbe.js`) with `collectEmbeddedAiProbeReport` / `summarizeEmbeddedAiReadiness` / `formatEmbeddedAiProbeReport`. No real AI model/engine and no npm dependency were added.
+- [x] Probe reads only capability signals (WebGPU, IndexedDB, storage estimate, memory/cores, secure context, online, platform/language/userAgent, mobile/iOS/Android/Safari/Chrome). Every read is wrapped so a missing API never throws; `storage.estimate()` rejection is handled.
+- [x] Readiness summary returns a hedged `likely / limited / unlikely / unknown` with reasons/warnings/nextActions (no over-commitment).
+- [x] Chose approach A: `EmbeddedAiProbePanel.jsx` is an unmounted dev-only component (plus `EMBEDDED_AI_PROBE_ENABLED = false`). It is not imported by `src/main.js` / `src/App.jsx` and is not in the normal UI.
+- [x] No external send and no auto-save: the probe/panel contain no network calls (fetch/XHR/beacon), no backend writes, and no browser-storage writes; results are shown as plain text for manual copy. No permissions are requested. No raw-HTML sinks.
+- [x] `EMBEDDED_AI_UI_ENABLED` stays `false`; Ollama implementation and the paused Local AI UI are unchanged. Home / Records / Profile production routes untouched.
+- [x] Added `docs/EMBEDDED_AI_PLAN.md` sections `## Phase 2 Device Probe` and `## Manual Device Checklist`; updated `README.md`, `docs/SECURITY_CHECKLIST.md`, `docs/REACT_MIGRATION_PLAN.md`.
+- [x] Added `test/embeddedAiProbe.test.js` (capability reads, no-throw on estimate failure, readiness levels, plain-text format) and extended `test/embeddedAiStatic.test.js` (probe disabled/unimported, no send/save, no permissions, no HTML sink, docs sections present).
+- [ ] Real-device results (iPhone Safari / Android Chrome / PC Chrome, online/offline, installed PWA) still need to be collected manually to choose a phase-3 engine candidate.
+
+## Embedded (on-device) AI experiment phase 2.5 hidden probe URL route (2026-06-14)
+- [x] Added a hidden URL gate so the device probe can be opened on a real phone without exposing it in the normal UI. URL forms: `?oriexProbe=embedded-ai` or `#embedded-ai-probe` (matcher in `src/features/embeddedAi/embeddedAiProbeRoute.js`, never throws).
+- [x] `src/main.js`: on a normal visit it boots the legacy app as before; only when the probe URL is detected does it dynamic-import `mountProbe.jsx` (a separate lazy chunk) and mount the probe instead. On any probe-load failure it falls back to the legacy app (no white screen). The legacy boot string `legacy/oriex-app.bundle.js` is preserved; no `App.jsx` entry, no `createRoot(` and no JSX added to the `.js` entry.
+- [x] Initial bundle unaffected: the probe panel + React live in the lazy chunk; the only static main.js addition is the tiny URL matcher. The probe chunk is not loaded on a normal visit.
+- [x] `EMBEDDED_AI_UI_ENABLED` and `EMBEDDED_AI_PROBE_ENABLED` both remain `false`; not added to TABS / normal nav; Local AI UI pause, Ollama implementation, and Home/Records/Profile routes unchanged.
+- [x] Probe still does not send or auto-save results (no network, no backend, no browser-storage write) and requests no permissions; results are plain text for manual copy. Confirmed the six required notices are shown in `EmbeddedAiProbePanel.jsx`.
+- [x] Added `docs/EMBEDDED_AI_PLAN.md` section `## Opening the Device Probe`; updated `README.md` and `docs/SECURITY_CHECKLIST.md`.
+- [x] Added `test/embeddedAiProbeRoute.test.js` (normal URL → no probe; query/hash forms → probe; near-miss rejects; never throws; main.js wiring: legacy preserved, gated dynamic import, no static panel import) and updated `test/embeddedAiStatic.test.js` for the gated route.
+- [ ] Real-device probe results still to be collected via the URL to choose the phase-3 engine candidate.
+
+## Embedded (on-device) AI experiment phase 2.6 device-results template (2026-06-14)
+- [x] Added `docs/EMBEDDED_AI_DEVICE_RESULTS.md`: a recording template for real-device probe results (Purpose, Probe URLs, Devices to Test, a Result Template table, How to Decide Phase 3, and Privacy Notes). Docs-only — no code, no dependency, no model.
+- [x] The template table has rows for iPhone Safari / Android Chrome / PC Chrome (browser + PWA) and columns for Readiness / WebGPU / IndexedDB / Storage quota / Storage usage / Secure context / Notes.
+- [x] Phase-3 decision guidance recorded (likely → WebGPU engines viable; limited → prefer Transformers.js-style small models; unlikely → keep PC Ollama, skip embedded production UI; unknown → re-check probe logic / browser support).
+- [x] Privacy notes added: no personal info (names, student data, teacher memos, learning records) in results; results are not auto-sent / not auto-saved; share only device/browser/readiness/WebGPU/IndexedDB/storage; check screenshots for personal info.
+- [x] Linked from `README.md` and `docs/EMBEDDED_AI_PLAN.md` (Opening the Device Probe).
+- [x] No code changed: `EMBEDDED_AI_UI_ENABLED` / `EMBEDDED_AI_PROBE_ENABLED` stay `false`, normal UI unchanged, legacy boot preserved, no external AI / dependency / model added.
+- [x] Added `test/embeddedAiDeviceResultsDocs.test.js` (file exists, probe URLs, device rows, required columns, privacy note, phase-3 criteria, linked from README/plan).
+- [ ] The table is intentionally empty until measured on real devices.
+
 ## Firebase read hardening (2026-06-14)
 - [x] Other bug checks focused on Firebase/read paths, repository guardrails, polling, and non-legacy dangerous read patterns.
 - [x] `readCache` now deduplicates same-key in-flight reads, so two screens requesting the same Firestore target at the same moment share one fetch.

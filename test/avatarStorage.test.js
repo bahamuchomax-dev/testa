@@ -118,7 +118,7 @@ describe("avatar never uses base64 / localStorage (static)", () => {
 
   it("Profile save payload contains only name/bio (no avatar image)", () => {
     expect(PROFILE).toMatch(
-      /profiles\.save\(\s*uid\s*,\s*\{\s*name:\s*profile\.name\s*,\s*bio:\s*profile\.bio\s*\}\s*\)/
+      /profiles\.save\(\s*profileUid\s*,\s*\{\s*name:\s*profile\.name\s*,\s*bio:\s*profile\.bio\s*\}\s*\)/
     );
     expect(PROFILE).not.toMatch(/avatar:\s*dataUrl/);
   });

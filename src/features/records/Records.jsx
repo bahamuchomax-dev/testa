@@ -3,30 +3,43 @@ import { currentUid } from "../../services/firebase/client.js";
 import * as records from "../../services/repository/recordsRepository.js";
 
 /* ============================================================
- * Records — study-log screen scaffold
+ * Records — study-log screen scaffold (React migration phase 3)
  * ------------------------------------------------------------
- * Reference-note fixes:
+ * Safety baked in (phase 3 minimal hardening):
  *   - 0-minute logs are impossible. parsePositiveMinutes (in the repository)
  *     rejects anything under 1 minute, including 0.4, and the UI surfaces the
  *     returned error instead of silently writing a junk row.
- *   - manual entries are tagged source:"manual".
- *   - a failed write shows an error to the user.
+ *   - the free-text subject field has an explicit maxLength
+ *     (RECORDS_SUBJECT_MAX_LENGTH) and is sanitized with sanitizePlainText in
+ *     recordsRepository.add() before it is persisted (tags / dangerous schemes
+ *     stripped, length clamped; normal Japanese is preserved).
+ *   - no uid -> no write. submit/delete guard on uid before calling the repo.
+ *   - manual entries are tagged source:"manual"; a failed write shows an error.
+ *   - rows render with plain {text} expressions; no raw-HTML sinks are used.
  *
- * STATUS: documented migration target. Reuses .rx-home / .rx-tf / .rx-cta /
- * .rx-talk row styles. See MIGRATION.md.
+ * STATUS: still NOT a production route. src/main.js boots the legacy bundle and
+ * the live learning-record screen is the legacy one. This component is only
+ * reachable from the (unmounted) App.jsx scaffold. Storage is still localStorage
+ * via recordsRepository; Firestore migration is a later phase (see
+ * docs/REACT_MIGRATION_PLAN.md). Reuses .rx-home / .rx-tf / .rx-cta / .rx-talk.
  * ============================================================ */
 
 export default function Records({ uid = currentUid(), onBack }) {
-  const [rows, setRows] = useState(() => records.list(uid));
+  const recordUid = uid || "";
+  const [rows, setRows] = useState(() => records.list(recordUid));
   const [minutes, setMinutes] = useState("");
   const [subject, setSubject] = useState("");
   const [error, setError] = useState("");
 
-  const refresh = () => setRows(records.list(uid));
+  const refresh = () => setRows(records.list(recordUid));
 
   const submit = () => {
     setError("");
-    const res = records.add(uid, { minutes, subject, source: "manual" });
+    if (!recordUid) {
+      setError("ログイン状態を確認してから記録してください。");
+      return;
+    }
+    const res = records.add(recordUid, { minutes, subject, source: "manual" });
     if (!res.ok) {
       setError(res.error);
       return;
@@ -37,7 +50,11 @@ export default function Records({ uid = currentUid(), onBack }) {
   };
 
   const del = (id) => {
-    records.remove(uid, id);
+    if (!recordUid) {
+      setError("ログイン状態を確認してから削除してください。");
+      return;
+    }
+    records.remove(recordUid, id);
     refresh();
   };
 
@@ -59,6 +76,7 @@ export default function Records({ uid = currentUid(), onBack }) {
         className="rx-tf"
         style={{ marginTop: 8 }}
         placeholder="教科（任意）"
+        maxLength={records.RECORDS_SUBJECT_MAX_LENGTH}
         value={subject}
         onChange={(e) => setSubject(e.target.value)}
       />

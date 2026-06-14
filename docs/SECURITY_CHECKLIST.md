@@ -12,6 +12,23 @@
 - [ ] `localStorage` に保存するのはローカルAI設定だけ。
 - [ ] APIキーをコード、`.env`、`localStorage` に保存していない。
 
+## スマホ向け埋め込みAI（実験）
+
+- [ ] 実験機能であり、通常UIでは無効（`EMBEDDED_AI_UI_ENABLED = false`）。本番導線に出していない。
+- [ ] `src/main.js` から import しておらず、初期表示・初期 bundle に含めていない。
+- [ ] プロンプト・入力文・生徒データ・先生メモを外部AI APIへ送信していない。
+- [ ] 外部AI API / 外部AI エンドポイント / AIキー / `.env` を追加していない。
+- [ ] エンジン/ライブラリは opt-in 時のみ動的 import する設計（今回はライブラリ依存を追加していない）。
+- [ ] モデル取得先を使う場合は docs に明記し、入力文は送らない。長文プロンプトを `localStorage` に保存しない。
+- [ ] IndexedDB / Cache Storage にモデルキャッシュが作られる場合は docs に明記する。
+- [ ] 生成結果を HTML として描画しない（`dangerouslySetInnerHTML` / `innerHTML` 不使用）。
+- [ ] Ollama 実装を削除していない。LocalAI UI 停止状態を勝手に戻していない。
+- [ ] 実エンジンはまだ追加していない（依存追加なし）。具体的なエンジン候補名は src ではなく docs に記載（src はベンダ中立）。
+- [ ] フェーズ2の実機診断プローブは端末機能の有無を読むだけ。診断結果を外部送信しない / 自動保存しない / Firebaseへ送らない。
+- [ ] プローブは権限要求しない（位置情報・連絡先・写真・マイク・カメラを要求しない）。
+- [ ] プローブは未マウント（`EMBEDDED_AI_PROBE_ENABLED = false`、通常UI未表示）。診断結果はコピー用テキスト表示のみ。
+- [ ] 診断は明示URL（`?oriexProbe=embedded-ai` / `#embedded-ai-probe`）でのみ開く。通常アクセスは legacy 起動のまま、診断chunkを読み込まない。診断UIは dynamic import で別chunk。
+
 ## PDF
 
 - [ ] PDFテキスト抽出はブラウザ内で行う。

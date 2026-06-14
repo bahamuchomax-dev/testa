@@ -3,11 +3,38 @@
  * Screens call list()/add()/remove() and never touch storage directly.
  * When you wire Firestore, implement the same 3 methods against it and
  * keep this localStorage version as the offline fallback.
+ *
+ * SAFETY (React migration phase 3):
+ *   - Writes are pinned to the current user via assertOwnUid; a client-passed
+ *     uid that differs from the signed-in user is ignored, never trusted.
+ *   - `subject` is free text, so it is sanitized with sanitizePlainText before
+ *     it is persisted: HTML tags and dangerous schemes (javascript:, etc.) are
+ *     stripped, control characters removed, and the value is clamped to
+ *     RECORDS_SUBJECT_MAX_LENGTH. Normal Japanese / English / line breaks are
+ *     preserved. A whitespace-only subject is stored as "" (a safe default; the
+ *     UI shows the "学習" fallback for empty subjects).
+ *   - `minutes` keeps its existing parsePositiveMinutes validation (rounds to a
+ *     whole minute, rejects < 1 / NaN / negatives). No upper bound is enforced
+ *     today; see docs/REACT_MIGRATION_PLAN.md for the recommended cap to add
+ *     when Records moves to Firestore.
+ *
+ * TODO(firestore): when this moves off localStorage, keep the same list/add/
+ * remove/weekly surface, use a scoped recent-records query (current uid +
+ * recent date window + limit) fronted by readCache, and invalidate only the
+ * records cache key on add/remove. Avoid realtime listeners and unbounded
+ * collection fetches, and never read other users' records. See
+ * docs/REACT_MIGRATION_PLAN.md for the exact go-live conditions.
  */
 import { readJSON, writeJSON } from "./localStore.js";
 import { lsKey } from "./paths.js";
 import { parsePositiveMinutes } from "../../lib/minutes.js";
 import { assertOwnUid } from "../firebase/authz.js";
+import { sanitizePlainText } from "../security/sanitizeText.js";
+
+/* Max length for the free-text manual subject field. Kept here (not in the
+ * screen) so the repository clamp is the source of truth; Records.jsx imports
+ * this same constant for its input maxLength so the two never drift. */
+export const RECORDS_SUBJECT_MAX_LENGTH = 80;
 
 export function list(uid) {
   const rows = readJSON(lsKey.records(uid), []);
@@ -22,10 +49,17 @@ export function add(uid, input) {
   if (minutes == null) {
     return { ok: false, error: "1分以上の数値を入力してください。" };
   }
+  // XSS / storage hygiene: never persist raw user HTML. Strip tags + dangerous
+  // schemes, drop control chars, trim, and clamp length. Empty -> "" (safe
+  // default; the UI renders the "学習" fallback for empty subjects).
+  const subject = sanitizePlainText(input?.subject ?? "", {
+    maxLength: RECORDS_SUBJECT_MAX_LENGTH,
+    trim: true,
+  });
   const record = {
     id: input?.id || "rec_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
     minutes,
-    subject: input?.subject ?? "",
+    subject,
     source: input?.source || "manual",
     createdAt: input?.createdAt ?? Date.now(),
   };
