@@ -72,5 +72,7 @@ grep -RInE "api\.openai\.com|api\.anthropic\.com|generativelanguage\.googleapis\
 
 - [ ] README の起動手順、build 手順、test 手順、security:scan 手順が最新。
 - [ ] `docs/SECURITY_CHECKLIST.md`、`docs/XSS_AUDIT.md`、`docs/SECRET_AUDIT.md`、`docs/BUG_AUDIT.md` を確認した。
+- [ ] GitHub Pages の Source が **GitHub Actions** になっている。`main` / root 配信のままだと Vite 開発用 `index.html` が配信され、白画面になる可能性がある。
+- [ ] Actions の Pages deploy で `node scripts/pagesSmokeCheck.mjs dist` が成功している。
 - [ ] Firestore Rules / 認証 / データ構造 / テーマ写真 / アバター / ローカルAIの仕様を本リリースで不要に変更していない。
 - [ ] 公開するコミットまたは ZIP の範囲を最終確認した。

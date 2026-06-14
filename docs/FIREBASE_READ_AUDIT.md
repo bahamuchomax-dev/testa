@@ -1,5 +1,12 @@
 # Firebase 読み取り監査 / 削減方針（FIREBASE_READ_AUDIT）
 
+## 2026-06-14 追加対応: in-flight read dedupe
+- `readCache` を TTL キャッシュだけでなく、同一 key の in-flight read を共有する実装に更新。
+- 同じ Firestore 対象を複数画面/複数コンポーネントが同時に要求しても、fetch は1回にまとまる。
+- `invalidate()` / `invalidatePrefix()` / `set()` / `clear()` は pending read も無効化し、保存/削除後に古い read 結果が cache を再汚染しない。
+- 失敗した read は cache せず、次回 `get()` で再試行できる。
+- 回帰テスト: `test/readCache.test.js`。
+
 最終更新: このドキュメントは Firestore 読み取り回数の削減とセキュリティ強化のための監査結果です。
 
 ## 0. 調査方法

@@ -6,6 +6,7 @@ import { readFileSync } from "node:fs";
 
 const MAIN = readFileSync("src/main.jsx", "utf8");
 const INDEX_HTML = readFileSync("index.html", "utf8");
+const DEPLOY_PAGES = readFileSync(".github/workflows/deploy-pages.yml", "utf8");
 const SW = readFileSync("public/sw.js", "utf8");
 const MANIFEST = JSON.parse(readFileSync("public/manifest.webmanifest", "utf8"));
 const PDF_PANEL = readFileSync("src/features/localAi/panels/PdfQuestionPanel.jsx", "utf8");
@@ -60,5 +61,14 @@ describe("safe meta CSP (static)", () => {
     const csp = m[1];
     expect(csp).toMatch(/object-src\s+'none'/);
     expect(csp).toMatch(/base-uri\s+'self'/);
+  });
+});
+
+describe("GitHub Pages deployment", () => {
+  it("publishes the built dist artifact after a project-page smoke check", () => {
+    expect(DEPLOY_PAGES).toContain("npm run build");
+    expect(DEPLOY_PAGES).toContain("node scripts/pagesSmokeCheck.mjs dist");
+    expect(DEPLOY_PAGES).toContain("actions/upload-pages-artifact");
+    expect(DEPLOY_PAGES).toMatch(/path:\s*dist/);
   });
 });

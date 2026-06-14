@@ -55,7 +55,7 @@ npm run test:rules
 
 公開前は [docs/GITHUB_RELEASE_CHECKLIST.md](./docs/GITHUB_RELEASE_CHECKLIST.md) を上から確認してください。最低限、`lint`、`test`、`security:scan`、`build`、`audit`、外部AI文字列チェック、ZIP内容確認、PC/スマホ実機確認、Service Worker 更新確認、ハムスター3D、テーマ写真、アバター保存/復元、XSS 簡易確認を行います。
 
-Vite は `base: "./"` で設定しており、GitHub Pages のプロジェクトサブパスでも相対URLで動く構成です。`dist/` は生成物なので、開発 ZIP やソース管理には含めません。
+Vite は `base: "./"` で設定しており、GitHub Pages のプロジェクトサブパスでも相対URLで動く構成です。`dist/` は生成物なので、開発 ZIP やソース管理には含めません。GitHub Pages はリポジトリ直下ではなく、GitHub Actions が生成した `dist/` artifact を配信してください。
 
 ## ローカルAI
 
@@ -196,7 +196,7 @@ src/styles/utilities.css
 このリポジトリには GitHub 用のワークフローが含まれています（`.github/workflows/`）。
 
 - `ci.yml` … `push`（main）と Pull Request で `npm ci → lint → test → security:scan → build → npm audit` を自動実行します。秘密情報スキャン（`security:scan`）も CI で必ず走ります。
-- `deploy-pages.yml` … main への push で Vite ビルドを GitHub Pages へ自動デプロイします。`vite` の `base: "./"` によりプロジェクトのサブパス配信でもアセットが解決されます。
+- `deploy-pages.yml` … main への push で Vite ビルドを GitHub Pages へ自動デプロイします。`vite` の `base: "./"` によりプロジェクトのサブパス配信でもアセットが解決されます。ビルド後に `node scripts/pagesSmokeCheck.mjs dist` を実行し、白画面につながる asset 参照漏れをデプロイ前に検出します。
 
 ### 初回プッシュ
 
@@ -211,7 +211,7 @@ git push -u origin main
 
 ### GitHub Pages を有効化（Actions デプロイを使う場合）
 
-リポジトリの **Settings → Pages → Build and deployment → Source** を **「GitHub Actions」** に設定します。以後、main への push で自動デプロイされます。手動で `dist/` をアップロードする運用を続ける場合は `deploy-pages.yml` を使わなくても構いません。
+リポジトリの **Settings → Pages → Build and deployment → Source** を **「GitHub Actions」** に設定します。以後、main への push で自動デプロイされます。Source が `main` / root のままだと、Vite の開発用 `index.html` が配信されて白画面になる可能性があります。手動で `dist/` をアップロードする運用を続ける場合は `deploy-pages.yml` を使わなくても構いません。
 
 ### 公開前チェック（ローカル）
 

@@ -1,8 +1,9 @@
 name: Deploy to GitHub Pages
 
 # Builds the Vite app and publishes dist/ to GitHub Pages on push to main.
-# One-time setup: repo Settings → Pages → "Build and deployment" → Source = "GitHub Actions".
-# (vite base is "./", so assets resolve correctly under the project subpath.)
+# One-time setup:
+# repo Settings -> Pages -> Build and deployment -> Source = "GitHub Actions".
+# vite base is "./", so assets resolve correctly under the project subpath.
 
 on:
   push:
@@ -34,6 +35,9 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Pages smoke check
+        run: node scripts/pagesSmokeCheck.mjs dist
 
       - uses: actions/configure-pages@v5
 

@@ -1,5 +1,20 @@
 # BUG_AUDIT
 
+## Startup white-screen hardening (2026-06-14)
+- [x] Verified the Vite dev server renders the Oriex login screen instead of a blank `#root`.
+- [x] Verified the production `dist/` build renders when served from the GitHub Pages project subpath `/testa/`.
+- [x] Added `scripts/pagesSmokeCheck.mjs` to fail deployment when `dist/index.html` has project-page-unsafe asset references or required Pages files are missing.
+- [x] Wired the Pages smoke check into `.github/workflows/deploy-pages.yml` after `npm run build` and before `upload-pages-artifact`.
+- [x] Added a static test so the Pages workflow keeps publishing `dist` after running the smoke check.
+- [ ] GitHub repository Settings -> Pages -> Source must remain `GitHub Actions`; serving `main` / root can still show a white screen because root `index.html` is Vite source, not a built artifact.
+
+## Firebase read hardening (2026-06-14)
+- [x] Other bug checks focused on Firebase/read paths, repository guardrails, polling, and non-legacy dangerous read patterns.
+- [x] `readCache` now deduplicates same-key in-flight reads, so two screens requesting the same Firestore target at the same moment share one fetch.
+- [x] `readCache` now prevents an invalidated in-flight read from repopulating stale cache after save/delete.
+- [x] Added regression tests for in-flight read sharing, failed-read retry, invalidate safety, and prefix invalidation safety.
+- [ ] Legacy bundle read behavior remains minified and not directly edited; future React migration should replace each legacy read with scoped query + `readCache`.
+
 ## Security hardening (2026-06-14)
 - [x] `sanitizeUrl` blocks protocol-relative (`//host`) and UNC-style (`\\host`) URLs so attacker-controlled values cannot bypass the scheme allow-list.
 - [x] `sanitizeUrl` keeps `blob:` support only for same-origin blob URLs; external-origin blob URLs are rejected.
