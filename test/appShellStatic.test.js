@@ -41,6 +41,7 @@ describe("repository-root static startup fallback", () => {
 
   it("uses project-relative manifest and icon paths for GitHub Pages subpaths", () => {
     expect(INDEX_HTML).toContain('rel="manifest" href="./manifest.webmanifest"');
+    expect(INDEX_HTML).toContain('rel="icon" type="image/png" href="./icon-192.png"');
     expect(INDEX_HTML).toContain('rel="apple-touch-icon" href="./icon-180.png"');
     expect(INDEX_HTML).not.toContain('href="/manifest.webmanifest"');
     expect(INDEX_HTML).not.toContain('href="/icon-180.png"');
@@ -48,6 +49,8 @@ describe("repository-root static startup fallback", () => {
     expect(existsSync("icon-180.png")).toBe(true);
     expect(existsSync("icon-192.png")).toBe(true);
     expect(existsSync("icon-512.png")).toBe(true);
+    expect(existsSync("public/assets/icon-192.png")).toBe(true);
+    expect(existsSync("public/assets/icon-512.png")).toBe(true);
   });
 
   it("keeps the live entry free of JSX syntax and App.jsx imports", () => {
