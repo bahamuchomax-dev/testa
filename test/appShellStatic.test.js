@@ -1,30 +1,59 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 /* Static guards for the app-shell fixes (bug-fix phase 2). No DOM/React
  * runtime needed — we assert against the source files directly. */
 
-const MAIN = readFileSync("src/main.jsx", "utf8");
+const MAIN = readFileSync("src/main.js", "utf8");
 const INDEX_HTML = readFileSync("index.html", "utf8");
 const DEPLOY_PAGES = readFileSync(".github/workflows/deploy-pages.yml", "utf8");
 const SW = readFileSync("public/sw.js", "utf8");
 const MANIFEST = JSON.parse(readFileSync("public/manifest.webmanifest", "utf8"));
 const PDF_PANEL = readFileSync("src/features/localAi/panels/PdfQuestionPanel.jsx", "utf8");
 
-describe("service worker registration (main.jsx)", () => {
+describe("service worker registration (main.js)", () => {
   it("registers the service worker", () => {
     expect(MAIN).toContain('"serviceWorker" in navigator');
     expect(MAIN).toMatch(/navigator\.serviceWorker\s*\.register\(/);
   });
   it("registers only in production and after window load", () => {
-    expect(MAIN).toContain("import.meta.env.PROD");
+    expect(MAIN).toContain("VITE_ENV.PROD");
     expect(MAIN).toMatch(/addEventListener\(\s*["']load["']/);
   });
   it("uses a BASE_URL-relative path (GitHub Pages subpath safe)", () => {
-    expect(MAIN).toContain("${import.meta.env.BASE_URL}sw.js");
+    expect(MAIN).toContain("APP_BASE_URL");
+    expect(MAIN).toContain("${APP_BASE_URL}sw.js");
   });
   it("never breaks the app on failure (has a catch)", () => {
     expect(MAIN).toMatch(/\.catch\(/);
+  });
+});
+
+describe("repository-root static startup fallback", () => {
+  it("uses a browser-accepted .js entry and links CSS from index.html", () => {
+    expect(INDEX_HTML).toContain('src="./src/main.js"');
+    expect(INDEX_HTML).not.toContain("/src/main.jsx");
+    expect(INDEX_HTML).not.toContain('src="/src/');
+    expect(INDEX_HTML).toContain('href="./src/styles/utilities.css"');
+    expect(INDEX_HTML).toContain('href="./src/styles/app.css"');
+    expect(MAIN).not.toMatch(/import\s+["'][^"']+\.css["']/);
+  });
+
+  it("uses project-relative manifest and icon paths for GitHub Pages subpaths", () => {
+    expect(INDEX_HTML).toContain('rel="manifest" href="./manifest.webmanifest"');
+    expect(INDEX_HTML).toContain('rel="apple-touch-icon" href="./icon-180.png"');
+    expect(INDEX_HTML).not.toContain('href="/manifest.webmanifest"');
+    expect(INDEX_HTML).not.toContain('href="/icon-180.png"');
+    expect(existsSync("manifest.webmanifest")).toBe(true);
+    expect(existsSync("icon-180.png")).toBe(true);
+    expect(existsSync("icon-192.png")).toBe(true);
+    expect(existsSync("icon-512.png")).toBe(true);
+  });
+
+  it("keeps the live entry free of JSX syntax and App.jsx imports", () => {
+    expect(MAIN).not.toMatch(/<\s*[A-Z][A-Za-z0-9]*/);
+    expect(MAIN).not.toMatch(/from\s+["']\.\/App(\.jsx)?["']/);
+    expect(MAIN).toContain("legacy/oriex-app.bundle.js");
   });
 });
 

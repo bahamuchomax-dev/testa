@@ -14,8 +14,8 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Oriex" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="/icon-180.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./icon-180.png" />
     <title>Oriex</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -24,15 +24,17 @@
       href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Comfortaa:wght@500;700&family=Quicksand:wght@600;700&family=Fredoka:wght@500;600;700&family=Varela+Round&family=Mochiy+Pop+One&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="./src/styles/utilities.css" />
+    <link rel="stylesheet" href="./src/styles/app.css" />
 
     <!-- 3D engine (three.js) is NOT loaded here synchronously anymore.
          It was render-blocking on every page; it is now fetched off the
-         critical path via src/services/loadThree.js (see main.jsx). -->
+         critical path via src/services/loadThree.js (see main.js). -->
     <!-- best-effort portrait lock (ignored on desktop) -->
     <script>try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock("portrait").catch(function(){})}catch(e){}</script>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <script type="module" src="./src/main.js"></script>
   </body>
 </html>

@@ -20,7 +20,7 @@ setInterval  setTimeout  addDoc  setDoc  updateDoc  deleteDoc
 
 重要な前提（正確さのため明記）:
 
-- **ライブアプリの本体は `src/legacy/oriex-app.bundle.js`（minify 済み・約2MB・手編集不可）** です。`src/App.jsx` / `src/features/*` の多くは移行用スキャフォールドで、まだマウントされていません（`src/main.jsx` は legacy バンドルを起動）。
+- **ライブアプリの本体は `src/legacy/oriex-app.bundle.js`（minify 済み・約2MB・手編集不可）** です。`src/App.jsx` / `src/features/*` の多くは移行用スキャフォールドで、まだマウントされていません（`src/main.js` は legacy バンドルを起動）。
 - legacy バンドルには **Firebase SDK 本体がバンドルされている**ため、パターン件数は「アプリのコード＋SDK内部コード」の合算です。ソースマップが同梱されていないため、minify 済みコードでの**呼び出し単位の正確な特定はできません**。件数は傾向の把握用です。
 - 実際に編集可能な層（`src/services/repository/*`、`src/services/firebase/*`）は現在 **localStorage 実装＋Firestore スタブ**（`firebaseEnabled = false`）です。ここが将来 Firestore を有効化する唯一の接続点（`src/services/firebase/client.js` のコメント参照）であり、本対応では**この層に安全で低読み取りなパターンを実装**しました。
 

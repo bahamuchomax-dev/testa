@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 
-const MAIN = readFileSync("src/main.jsx", "utf8");
+const MAIN = readFileSync("src/main.js", "utf8");
 const APP = readFileSync("src/App.jsx", "utf8");
 const FLAG = readFileSync("src/features/localAi/uiFlag.js", "utf8");
 
@@ -10,7 +10,7 @@ describe("local AI UI is temporarily paused", () => {
     expect(FLAG).toMatch(/LOCAL_AI_UI_ENABLED\s*=\s*false/);
   });
 
-  it("does not statically import or directly call the sidecar from main.jsx", () => {
+  it("does not statically import or directly call the sidecar from main.js", () => {
     expect(MAIN).not.toMatch(/import\s+\{\s*mountLocalAiSidecar\s*\}/);
     expect(MAIN).not.toMatch(/\bmountLocalAiSidecar\s*\(\s*\)/);
     expect(MAIN).toContain("LOCAL_AI_UI_ENABLED");

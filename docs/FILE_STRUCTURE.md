@@ -21,7 +21,7 @@ oriex/
     icon-192.png
     icon-512.png
   src/
-    main.jsx
+    main.js
     App.jsx
     features/
     services/
@@ -34,7 +34,7 @@ oriex/
 
 ## 起動順
 
-`src/main.jsx` は次の順番で読み込みます。
+`src/main.js` は次の順番で読み込みます。
 
 ```txt
 styles/utilities.css

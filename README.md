@@ -57,6 +57,8 @@ npm run test:rules
 
 Vite は `base: "./"` で設定しており、GitHub Pages のプロジェクトサブパスでも相対URLで動く構成です。`dist/` は生成物なので、開発 ZIP やソース管理には含めません。GitHub Pages はリポジトリ直下ではなく、GitHub Actions が生成した `dist/` artifact を配信してください。
 
+起動入口は `src/main.js` です。通常は Vite/GitHub Actions の build artifact から起動しますが、GitHub Pages が誤ってリポジトリ直下を配信しても最低限 legacy app が起動できるよう、入口は JSX を含まない `.js` にし、CSS は `index.html` から読み込んでいます。
+
 ## ローカルAI
 
 ローカルAI機能は、同じ端末で起動した Ollama にだけ接続します。外部AI API、外部AI SDK、外部AI APIキー入力欄は使いません。外部AI APIを追加しないでください。

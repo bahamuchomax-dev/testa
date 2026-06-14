@@ -8,6 +8,14 @@
 - [x] Added a static test so the Pages workflow keeps publishing `dist` after running the smoke check.
 - [ ] GitHub repository Settings -> Pages -> Source must remain `GitHub Actions`; serving `main` / root can still show a white screen because root `index.html` is Vite source, not a built artifact.
 
+## Startup root-source fallback (2026-06-14)
+- [x] Found the live GitHub Pages URL was serving repository-root `index.html` (`/src/main.jsx`) instead of the `dist/` artifact (`./assets/index-*.js`), leaving the app unable to start when Pages branch/root deployment won the race.
+- [x] Renamed the entry from `src/main.jsx` to `src/main.js` so GitHub Pages can serve it with a JavaScript-compatible MIME type in repository-root fallback mode.
+- [x] Moved startup CSS loading from JS imports to `index.html` stylesheet links. Raw CSS module imports are not valid in repository-root static hosting and would stop startup before the legacy bundle mounts.
+- [x] Kept `src/main.js` booting `src/legacy/oriex-app.bundle.js`; `src/App.jsx` is still not mounted.
+- [x] Local AI UI remains paused through `LOCAL_AI_UI_ENABLED = false`; the dynamic sidecar import is still guarded.
+- [ ] GitHub Pages Settings should still be switched to Source = `GitHub Actions`; the root-source fallback is a safety net, not the preferred deployment path.
+
 ## Firebase read hardening (2026-06-14)
 - [x] Other bug checks focused on Firebase/read paths, repository guardrails, polling, and non-legacy dangerous read patterns.
 - [x] `readCache` now deduplicates same-key in-flight reads, so two screens requesting the same Firestore target at the same moment share one fetch.
@@ -38,7 +46,7 @@
 - [x] 選択中教科カードが透明ボタンのように見える UI バグを修正。原因は legacy 側が選択中カードに `background: ${色}12` 相当の極薄アクセント背景をインライン指定していたこと。
 - [x] legacy bundle は直接編集せず、`src/services/oxHelpers.js` で英単語/熟語/漢字/化学/古文のカードだけに `data-ox-subject-card` / `data-ox-subject-selected` を付与し、`src/styles/app.css` の限定 CSS override で選択中も白/半透明白のカード背景を維持するようにした。
 - [x] 選択中カードは accent 色の border / label / underline / icon を維持。テーマ写真背景では白カードの不透明度を少し上げ、視認性を落とさない。
-- [x] ローカルAIボタンは一時的に非表示/アクセス停止。`src/main.jsx` は `LOCAL_AI_UI_ENABLED` が `false` の間 `mountLocalAiSidecar` を読み込まず、通常起動で浮遊ボタンを出さない。
+- [x] ローカルAIボタンは一時的に非表示/アクセス停止。`src/main.js` は `LOCAL_AI_UI_ENABLED` が `false` の間 `mountLocalAiSidecar` を読み込まず、通常起動で浮遊ボタンを出さない。
 - [x] `App.jsx` の `TABS` から `localai` / `AI` を外した。ローカルAI実装自体（`src/features/localAi/`、Ollama 通信、検証テスト）は削除せず保持。
 - [x] 将来再有効化する場合は `src/features/localAi/uiFlag.js` の `LOCAL_AI_UI_ENABLED` と sidecar mount / App 側導線を戻す。
 
@@ -47,7 +55,7 @@
 - このコンテナ環境では**ブラウザでの実操作（クリック/入力/再読込）はできません**。本監査は
   `npm ci` / `lint` / `test`（177 pass）/ `build`（64 modules, 成功）/ `audit`（0）/ `npm run dev`
   （`http://localhost:5173/` が HTTP 200）の出力と、**ソースコードの静的精査**にもとづきます。
-- **構造上の最重要事実**: `src/main.jsx` が実際にマウントするのは
+- **構造上の最重要事実**: `src/main.js` が実際にマウントするのは
   (1) `src/styles/*`、(2) `features/hamster/oriexHamu3D.js`（`window.OriexHamu3D`）、
   (3) `services/oxHelpers.js`（テーマ写真/プロフィール背景/アバター）、
   (4) **`src/legacy/oriex-app.bundle.js`（凍結された本体・minify・#root に自己マウント）**、
@@ -77,14 +85,14 @@
 
 - [x] 画面: PWA 全体（Service Worker）— **修正済み（bug-fix phase 2）**
   内容: `public/sw.js` が存在するのに登録されておらず、PWA キャッシュ/オフラインが効いていなかった。
-  対応: `src/main.jsx` 末尾で**本番ビルドのみ・`window load` 後・1回だけ**登録するように追加。
+  対応: `src/main.js` 末尾で**本番ビルドのみ・`window load` 後・1回だけ**登録するように追加。
         `navigator.serviceWorker` がある場合のみ実行し、`${import.meta.env.BASE_URL}sw.js`（GitHub Pages サブパス対応）を
         登録、成功は `console.info`、失敗は `console.warn` で記録し `.catch` でアプリを壊さない。
         開発時（`import.meta.env.PROD === false`）は登録しないのでキャッシュ事故も回避。
   テスト: `test/appShellStatic.test.js` で登録コード・PROD ガード・load イベント・BASE_URL パス・`.catch` の存在を検査。
 
 - [x] 画面: React シェル `src/App.jsx`（未マウント・潜在）— **調査済み／案A採用（bug-fix phase 5）**
-  調査結果: `App.jsx` は**どこからも import されておらず未マウント**（`main.jsx` は legacy バンドルを起動）。
+  調査結果: `App.jsx` は**どこからも import されておらず未マウント**（`main.js` は legacy バンドルを起動）。
         `tab === "teacher"` 分岐はあるが `TABS` に `teacher` が無く、`teacher` を設定する導線も無い＝**到達不能**。
         ただし**ライブ本体は legacy バンドル**で React シェルは動いていないため、ユーザーに見える実害（デッドタブ）は無い。
         また `TeacherProblems` 自体が `isTeacher(profile)` で非先生にUIを出さず、各操作は `assertTeacher` で防御済み＝
@@ -94,7 +102,7 @@
   対応: `App.jsx` の teacher 分岐に **TODO(react-shell) コメント**を追加（TABS に入れていない理由／将来は
         isTeacher で先生のみ表示／records は Home 経由で到達）。Firestore/Rules/データ構造・legacy バンドルは未変更。
   テスト: `test/appShellRouting.test.js`（teacher 分岐は存在するが TABS 未登録＝ungated nav 無し・TODO 明記・
-        将来 isTeacher ガード言及／`TeacherProblems` に isTeacher＋assertTeacher／`main.jsx` は legacy 起動で App 未マウント）。
+        将来 isTeacher ガード言及／`TeacherProblems` に isTeacher＋assertTeacher／`main.js` は legacy 起動で App 未マウント）。
 
 - [x] 画面: マイ/プロフィール `src/features/profile/Profile.jsx`（未マウント・潜在）— **修正済み（bug-fix phase 3）**
   過去の問題: アバターを `toDataURL` で base64 化し profile レコード経由で localStorage に保存していた（quota/肥大リスク）。
@@ -133,7 +141,7 @@
   完全遅延ロードできなかった理由（ライブのハムスター）: ライブのハムスター画面は**凍結された legacy バンドル**が描画し、
         画面を開いた瞬間に `window.OriexHamu3D(canvas, env)` を**同期的に**呼び、その中で `window.THREE` を同期参照する。
         バンドルは編集禁止で「開いた時に await して読む」フックを差し込めないため、**ライブ経路だけは画面表示時のみの
-        完全遅延にできない**。そこで `main.jsx` で**初回ペイント後（`requestIdleCallback`／`load` 後）に背景で
+        完全遅延にできない**。そこで `main.js` で**初回ペイント後（`requestIdleCallback`／`load` 後）に背景で
         `loadThree()` を実行**し、`window.THREE` を非ブロッキングで温める（ユーザーがハムスターを開く頃には準備済み）。
         これで「初期表示が重い」という本来の問題（レンダーブロッキング）は解消し、3D も維持される。
   3D/ハムスターへの影響: 機能は維持。React `HamsterRoom` はオンデマンド化（より堅牢）。`oriexHamu3D.js` は未変更。
@@ -194,7 +202,7 @@
 - phase 3: プロフィールアバターを IndexedDB Blob 保存へ（`src/services/avatarStorage.js`、長辺512px、
   Blob URL プレビュー、base64/localStorage 不使用、payload から画像除外）／テスト追加（`test/avatarStorage.test.js`）。
 - phase 4: `three.min.js` の同期ロードを廃止し `loadThree()`（遅延・dedup・BASE_URL・async・fail-safe）を追加。
-  `HamsterRoom` はオンデマンド、`main.jsx` は初回ペイント後に背景で warm。テスト追加（`test/loadThree.test.js`）。
+  `HamsterRoom` はオンデマンド、`main.js` は初回ペイント後に背景で warm。テスト追加（`test/loadThree.test.js`）。
 - phase 5: `App.jsx` の TeacherProblems 導線を調査＝**未マウントのため案A**（タブ追加せず TODO コメント整理）。
   `TeacherProblems` の isTeacher/assertTeacher 防御を確認。`src/legacy/README.md` の three.js 説明を現仕様
   （loadThree 遅延＋background warm）へ更新。テスト追加（`test/appShellRouting.test.js`）。

@@ -15,10 +15,10 @@ const HamsterRoom = lazy(() => import("./features/hamster/HamsterRoom.jsx"));
  * App — shell that hosts the migrated screens
  * ------------------------------------------------------------
  * This is the target root for the React/Vite rebuild. It is NOT yet mounted:
- * src/main.jsx still boots the original production bundle so the live app
+ * src/main.js still boots the original production bundle so the live app
  * keeps working untouched. Migration flips one screen at a time — render the
  * real component here, delete that screen from the bundle, repeat. When every
- * tab is migrated, point main.jsx at this file and drop src/legacy entirely.
+ * tab is migrated, point main.js at this file and drop src/legacy entirely.
  * See MIGRATION.md.
  *
  * Navigation reuses the existing .rx-tabbar styling.

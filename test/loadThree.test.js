@@ -95,7 +95,7 @@ describe("loadThree", () => {
 
 describe("three.js is no longer render-blocking (static)", () => {
   const INDEX = readFileSync("index.html", "utf8");
-  const MAIN = readFileSync("src/main.jsx", "utf8");
+  const MAIN = readFileSync("src/main.js", "utf8");
   const HAMSTER = readFileSync("src/features/hamster/HamsterRoom.jsx", "utf8");
 
   it("index.html does not load three.min.js synchronously", () => {
@@ -108,8 +108,9 @@ describe("three.js is no longer render-blocking (static)", () => {
     }
   });
 
-  it("main.jsx warms three.js off the critical path via loadThree", () => {
+  it("main.js warms three.js off the critical path via loadThree", () => {
     expect(MAIN).toContain("loadThree");
+    expect(MAIN).toContain("staticSourceAssetBaseUrl");
     expect(MAIN).toMatch(/requestIdleCallback|addEventListener\(\s*["']load["']/);
   });
 

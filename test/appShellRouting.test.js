@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 
 const APP = readFileSync("src/App.jsx", "utf8");
-const MAIN = readFileSync("src/main.jsx", "utf8");
+const MAIN = readFileSync("src/main.js", "utf8");
 const TEACHER = readFileSync("src/features/teacher/TeacherProblems.jsx", "utf8");
 
 describe("App shell — TeacherProblems routing (option A: shell unmounted)", () => {
@@ -30,11 +30,11 @@ describe("TeacherProblems — non-teacher guard", () => {
 });
 
 describe("React shell is not yet live (legacy bundle is the entry)", () => {
-  it("main.jsx boots the legacy bundle", () => {
+  it("main.js boots the legacy bundle", () => {
     expect(MAIN).toContain("legacy/oriex-app.bundle.js");
   });
 
-  it("main.jsx does NOT mount App.jsx", () => {
+  it("main.js does NOT mount App.jsx", () => {
     expect(MAIN).not.toMatch(/from\s+["']\.\/App(\.jsx)?["']/);
     expect(MAIN).not.toMatch(/\bimport\s+App\b/);
   });
