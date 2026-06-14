@@ -22,6 +22,13 @@ export const EMBEDDED_AI_EXPERIMENTAL = true;
 // not wired into normal navigation (the probe panel is an unmounted component).
 export const EMBEDDED_AI_PROBE_ENABLED = false;
 
+// Phase 3A WebGPU PoC. Phase 3C device spike: temporarily TRUE on the
+// dedicated device-spike verification branch so the hidden PoC URL can
+// load/generate on a real phone. MUST be set back to false before merging to
+// main. The PoC never appears in normal navigation regardless of this flag;
+// it is reachable only via the hidden PoC URL.
+export const EMBEDDED_AI_POC_ENABLED = true;
+
 // Phase 1 has exactly one tiny use case: a short review suggestion built from
 // today's study memo. Short input, no strict JSON output, safe to fail.
 export const EMBEDDED_AI_EXPERIMENT = "review-suggestion";

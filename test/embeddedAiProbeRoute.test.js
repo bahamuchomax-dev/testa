@@ -46,7 +46,7 @@ describe("main.js wiring — gated probe, preserved legacy boot", () => {
 
   it("guards the probe behind the URL matcher", () => {
     expect(MAIN).toContain("isEmbeddedAiProbeUrl");
-    expect(MAIN).toMatch(/isEmbeddedAiProbeUrl\(\s*window\.location\s*\)/);
+    expect(MAIN).toMatch(/isEmbeddedAiProbeUrl\(/);
   });
 
   it("loads the probe panel via dynamic import only (separate chunk)", () => {

@@ -114,6 +114,14 @@ PDFはブラウザ内でテキスト抽出する
 
 フェーズ3で実エンジンを選ぶ前に、iPhone / Android / PC で診断し、結果を [docs/EMBEDDED_AI_DEVICE_RESULTS.md](./docs/EMBEDDED_AI_DEVICE_RESULTS.md) のテンプレートに記録します。診断結果には名前・生徒情報・先生メモ・学習記録などの個人情報を含めないでください。
 
+実機結果（記録済み）: Android Chrome（Pixel 9）と iPhone Safari の両方で readiness `likely` / WebGPU `true` / IndexedDB `true`。このためフェーズ3は WebGPU系エンジンを第一候補にできます。ただし初回モデルサイズ・速度・メモリ・iOS Safariの実性能は未確認のため、Transformers.js系の小型モデルも保険候補として残します。実モデル・実エンジンはまだ未追加で、本番UIにも出していません（フラグは false のまま）。
+
+フェーズ3A（WebGPU最小PoC）では、実エンジンは見送り（defer）し、差し替え用の WebGPU adapter（`engines/webGpuEngineAdapter.js`）と隠しPoC URL（`?oriexProbe=embedded-ai-poc` / `#embedded-ai-poc`）＋フラグ `EMBEDDED_AI_POC_ENABLED = false` のみを追加しました。重いAIライブラリ・モデルは未追加で、PoCは通常UIに出さず dynamic import の別chunkです。
+
+フェーズ3Bでは WebLLM系エンジンを最小スパイク接続しました。依存 `@mlc-ai/web-llm`（0.2.84）、model id `Qwen2.5-0.5B-Instruct-q4f16_1-MLC`（インストール済みパッケージの prebuilt model list から確認）。ライブラリ本体は隠しPoC URLで「モデルを読み込む」を押した時だけ動的importされ、初期bundleには混ざりません（`index.html` 非参照の別chunk）。`EMBEDDED_AI_POC_ENABLED = false`（案A）のため既定は無効で、実機検証時のみローカルで一時的に true 化します。モデル/ランタイムは Hugging Face / MLC libs から取得されますが、これは重み・ランタイム取得であり、入力文・生徒データ・先生メモは外部AI APIへ送信しません（端末内処理）。フェーズ3Cでは、検証用ブランチ `embedded-ai-webllm-device-spike` 限定で `EMBEDDED_AI_POC_ENABLED = true` に一時切替し、隠しPoC URLで実機（PC Chrome → iPhone Safari、Androidは今回は未測定）の初回/2回目モデル読み込み時間・生成時間・成否を測定します。`EMBEDDED_AI_UI_ENABLED` / `EMBEDDED_AI_PROBE_ENABLED` は false のまま、PoCは通常UIに出ません。診断ログは長さ・指標のみ（`inputLength` のみで入力本文は含めない）で、自動保存・自動送信しません。**main へ戻す前に必ず `EMBEDDED_AI_POC_ENABLED = false` に戻します。** 測定欄は [docs/EMBEDDED_AI_DEVICE_RESULTS.md](./docs/EMBEDDED_AI_DEVICE_RESULTS.md) の「Phase 3C WebLLM Real Device Results」。
+
+GitHub Pages の自動deployは `main` pushのみです。検証ブランチpushだけではPagesへ自動反映されません。実機確認するときは、既存の `Deploy to GitHub Pages` workflowを `workflow_dispatch` で `embedded-ai-webllm-device-spike` ブランチから手動実行し、確認後に `main` を再deployしてください。通常URL `https://bahamuchomax-dev.github.io/testa/` ではPoCは出ず、検証URL `?oriexProbe=embedded-ai-poc` / `#embedded-ai-poc` のみで開きます。
+
 ## テーマ写真とアバター
 
 テーマ写真とプロフィールアバターは、どちらも端末内の IndexedDB に Blob として保存します。画像本体を `localStorage` に base64 保存せず、外部送信もしません。

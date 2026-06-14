@@ -50,3 +50,36 @@ describe("Embedded AI device-results template", () => {
     expect(linked).toBe(true);
   });
 });
+
+describe("Embedded AI device-results — recorded phase 2.7 results", () => {
+  it("records the Android Chrome result", () => {
+    expect(RESULTS).toMatch(/Android Chrome/);
+    expect(RESULTS).toMatch(/Pixel 9/);
+  });
+
+  it("records the iPhone Safari result", () => {
+    expect(RESULTS).toMatch(/iPhone/);
+    expect(RESULTS).toMatch(/Safari/);
+  });
+
+  it("records readiness likely for both devices", () => {
+    // at least two 'likely' readings in the recorded results
+    const likelyCount = (RESULTS.match(/Readiness:\s*likely/g) || []).length;
+    expect(likelyCount).toBeGreaterThanOrEqual(2);
+  });
+
+  it("records WebGPU true and IndexedDB true", () => {
+    expect(RESULTS).toMatch(/WebGPU:\s*true/);
+    expect(RESULTS).toMatch(/IndexedDB:\s*true/);
+  });
+
+  it("states the phase 3 first candidate is a WebGPU-style engine", () => {
+    expect(RESULTS).toMatch(/WebGPU系/);
+    expect(RESULTS).toMatch(/第一候補/);
+  });
+
+  it("keeps a Transformers.js-style small model as a fallback", () => {
+    expect(RESULTS).toMatch(/Transformers\.js系/);
+    expect(RESULTS).toMatch(/保険候補/);
+  });
+});

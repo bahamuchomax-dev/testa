@@ -116,6 +116,10 @@ A comparison to decide what (if anything) to try in phase 2. Nothing here is a c
 - PWA fit: perfect (nothing added).
 - Notes for Oriex: the safest state. Keep the embedded AI out of the production UI until device compatibility and model size are confirmed by real testing. This is the current state.
 
+## Phase 2 Device Results (summary)
+
+Real-device probe results are recorded in [docs/EMBEDDED_AI_DEVICE_RESULTS.md](./EMBEDDED_AI_DEVICE_RESULTS.md). So far Android Chrome (Pixel 9) and iPhone Safari both returned **readiness `likely`**, **WebGPU `true`**, and **IndexedDB `true`** in a secure context. Based on that, phase 3 can make a **WebGPU-style engine the first candidate**, while keeping a **Transformers.js-style small model as a fallback** because first-run model size, runtime speed, memory, and real iOS Safari performance are still unverified. No real model/engine has been added, and the embedded AI is still not exposed in the production UI (`EMBEDDED_AI_UI_ENABLED` / `EMBEDDED_AI_PROBE_ENABLED` stay `false`). PC Chrome and the PWA/offline rows are not yet measured.
+
 ## Phase 2 Entry Criteria
 
 Try a real engine in phase 2 only when all of these hold:
@@ -198,6 +202,67 @@ Check on each environment and record the readiness level:
 - After "Add to Home Screen" (installed PWA) — open the same URL / route
 
 Record results in the template at [docs/EMBEDDED_AI_DEVICE_RESULTS.md](./EMBEDDED_AI_DEVICE_RESULTS.md). Before choosing a phase-3 engine, probe iPhone / Android / PC and fill that table. Do not paste any personal information (names, student data, teacher memos, learning records) into the results.
+
+## Phase 3C WebLLM Device Spike
+
+Phase 3C is the **real-device spike** for the WebLLM PoC. It runs on a dedicated verification branch only.
+
+- **Branch-only flag:** `EMBEDDED_AI_POC_ENABLED = true` is set **temporarily** on the device-spike branch so the hidden PoC URL can load/generate on a real phone. `EMBEDDED_AI_UI_ENABLED` and `EMBEDDED_AI_PROBE_ENABLED` stay `false`. **The PoC flag MUST be reset to `false` before merging to main.** Even with it true, the PoC is never in normal navigation/TABS — it is reachable only via `?oriexProbe=embedded-ai-poc` / `#embedded-ai-poc`.
+- **Deploy policy:** the GitHub Pages workflow deploys automatically only from `main`. Pushing `embedded-ai-webllm-device-spike` does not auto-deploy. For a temporary real-device check, run the existing `Deploy to GitHub Pages` workflow manually (`workflow_dispatch`) from the `embedded-ai-webllm-device-spike` branch, then redeploy `main` after the test. Do not merge this branch into `main` while `EMBEDDED_AI_POC_ENABLED = true`.
+- **Still gated:** the model is loaded only when the user presses "モデルを読み込む"; opening the page loads nothing. Generation is gated behind WebGPU + IndexedDB and fails gracefully.
+- **Measurement log:** the PoC panel emits a copy-friendly plain-text diagnostic (timestamp, device summary, userAgent, readiness, WebGPU, IndexedDB, secureContext, online, model id, load start/finish/duration, first-or-cached, generation start/finish/duration, success/failure, error, input length, output length, storage quota and usage before/after). The log contains **only lengths and metrics — never the input body**; `inputLength` is logged, not the memo text. It is not auto-saved or auto-sent.
+- **Fixed sample input (no personal data):** "今日は英単語を20個覚えた。数学は二次関数のグラフを復習した。明日は確認テストをしたい。" → "今日やるべき復習を3つ以内で短く提案". No student names, teacher memos, real records, profiles, PDFs, or long input.
+- **Model fetch vs input send:** the model weights / WASM runtime are fetched and cached on-device; the input text is processed on-device and never sent to an external AI API.
+- **Order:** measure PC Chrome first as the positive-control device, then iPhone Safari. Android is not measured in this pass and remains `Not tested`. For each measured device, open the hidden URL, load the model (record first load), generate the fixed sample (record generation time + success), reload and load again (record cached load). If iPhone Safari crashes, freezes, or loads too slowly, stop and record the error. Record everything in the Phase 3C table in `docs/EMBEDDED_AI_DEVICE_RESULTS.md`.
+
+## Phase 3B WebLLM Spike
+
+Phase 3B wires a single WebGPU-first candidate — a **WebLLM engine** — into the adapter seam as a spike, behind the hidden PoC URL only.
+
+**Outcome: dependency added (kept).** `@mlc-ai/web-llm` (0.2.84) installs cleanly, `npm run build` / `npm run test` / `npm run security:scan` pass, and it stays out of the initial bundle (it is reached only through a dynamic `import()` inside the loader, so Vite emits it as a separate lazy chunk that `index.html` does not reference). No model weights are committed to the repo.
+
+- Dependency: `@mlc-ai/web-llm` (verified version 0.2.84).
+- Model id: `Qwen2.5-0.5B-Instruct-q4f16_1-MLC` — chosen from the installed package's `prebuiltAppConfig.model_list` (0.5B class, q4f16, `low_resource_required: true`, ~945 MB VRAM). Not guessed.
+- Model id confirmed via: `node -e` against the installed `@mlc-ai/web-llm`'s `prebuiltAppConfig.model_list`.
+- API confirmed against the installed package: `CreateMLCEngine(modelId, { initProgressCallback })` and `engine.chat.completions.create({ messages, temperature, max_tokens })`.
+
+**Model fetch vs input send (important):**
+- When the user explicitly loads the model, the engine fetches **model weights** from the engine provider (Hugging Face: `https://huggingface.co/mlc-ai/Qwen2.5-0.5B-Instruct-q4f16_1-MLC`) and the **WASM runtime** from the MLC libs host (`https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/`).
+- That download is **engine/weights/runtime only**. The user's input text is processed **on-device** and is **never sent to an external AI API**. These sources are not AI API endpoints.
+- The engine may cache the model/runtime on-device in IndexedDB / Cache Storage. The only thing cached is model/runtime — not prompts, not results, not learning data.
+
+**Loading is explicit, never on page open:**
+- `webLlmEngineLoader.js` does NOT import `@mlc-ai/web-llm` at module top level. The `import()` is inside the loader function registered via `registerWebGpuEngineLoader`.
+- The PoC panel registers the loader on mount (cheap, imports nothing). The library + model are fetched only when the user presses "モデルを読み込む". Opening the PoC page fetches no model.
+- `loadWebGpuEmbeddedAiEngine` gates on WebGPU + IndexedDB before any import, shares one in-flight load (no double download), and fails gracefully (no white screen).
+
+**Flag policy (option A, the safe default):** `EMBEDDED_AI_POC_ENABLED` stays `false`. The PoC page opens via the hidden URL but the load/generate buttons are disabled; the WebLLM wiring exists and is ready. Real-device verification is done by temporarily setting the flag `true` in source for local dev (never committed as `true`), then exercising the PoC URL on a real phone.
+
+**Use case (one only):** today's study memo → ≤3-line review suggestion. Input clamped to 800 chars; output trimmed to ≤3 lines of plain text. No PDF dumps, no bulk teacher memos, no student records, no long generation, no auto-save, no Firebase send, no HTML rendering, no inferring personal info.
+
+**Still to verify on real devices (record in `docs/EMBEDDED_AI_DEVICE_RESULTS.md`):** first-run model download time, generation time, memory headroom, and failure rate — on Android Chrome and especially iPhone Safari. If real iOS Safari behaviour is poor, fall back to the Transformers.js-style small-model candidate (kept in reserve) and, if needed, revert the dependency.
+
+## Phase 3A WebGPU PoC
+
+Phase 3A builds the **minimal WebGPU PoC scaffold**. Because Android Chrome (Pixel 9) and iPhone Safari both probed `likely` with WebGPU `true` and IndexedDB `true`, a **WebGPU-style engine is the first candidate**. A **Transformers.js-style small model is kept as a fallback** (it can run on WASM if real iOS Safari performance disappoints).
+
+**Decision this phase: the real engine is DEFERRED (adapter only).** No AI library dependency was added, for these reasons:
+- A WebGPU in-browser LLM library is heavy and its model weights are large (often hundreds of MB) — not something to wire in before measuring first-run size, speed, and memory on real phones.
+- Real iOS Safari performance is still unverified (phase 2.7 confirmed capability flags, not throughput).
+- Adding it now risks build/chunk bloat and unproven device behaviour. Deferring is the safe call, not a failure.
+
+So phase 3A ships:
+- `src/features/embeddedAi/engines/webGpuEngineAdapter.js` — a swappable seam (`loadWebGpuEmbeddedAiEngine`, `generateWithWebGpuEmbeddedAi`, `registerWebGpuEngineLoader`, `resetWebGpuEmbeddedAiEngineForTests`). It bundles no model/library, gates on WebGPU + IndexedDB, shares one in-flight load, and returns a graceful `{ ok:false, reason }` (no white screen). With no engine wired it returns `engine-not-bundled`.
+- A hidden PoC route (`embeddedAiPocRoute.js`) + panel (`EmbeddedAiPocPanel.jsx`) + lazy mount (`mountPoc.jsx`), reachable only via `?oriexProbe=embedded-ai-poc` or `#embedded-ai-poc`. Not in TABS, not in normal navigation.
+- A flag `EMBEDDED_AI_POC_ENABLED = false`. Even on the hidden URL the generate action only runs when this is intentionally set to `true` in source for local dev; the panel otherwise shows that the PoC is disabled. The PoC is never exposed in the production UI.
+
+**Wiring a real engine later (phase 3B):** call `registerWebGpuEngineLoader(loader)`, where `loader` does a dynamic `import()` of the chosen library inside itself (so it stays a lazy chunk, never in the initial bundle) and returns `{ generate(prompt) }`. Concrete library choice belongs in `docs/EMBEDDED_AI_DEVICE_RESULTS.md` / this file at that time.
+
+**Use case (kept to one):** today's study memo → a short review suggestion (≤3 lines). Input is clamped to 800 chars. No PDF dumps, no bulk teacher memos, no student records, no long generation, no strict JSON, no auto-save, no Firebase send.
+
+**Model fetch vs input send (important):** when a real engine is added, it **may download model / runtime bytes** from the engine provider (e.g. a CDN) and cache them on the device (IndexedDB / Cache Storage). That download carries no user data. The user's **input text is processed on-device and is never sent to an external AI API.** The exact model source and on-device cache must be recorded here before any real engine is enabled.
+
+**Still to verify on real devices before phase 3B:** first-run model size, generation speed, memory headroom, and real iOS Safari throughput. Record them in `docs/EMBEDDED_AI_DEVICE_RESULTS.md`.
 
 ## Future enable conditions
 

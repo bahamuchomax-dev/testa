@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 import {
@@ -21,8 +21,17 @@ const PLAN_PATH = "docs/EMBEDDED_AI_PLAN.md";
 const MAIN = readFileSync("src/main.js", "utf8");
 const APP = readFileSync("src/App.jsx", "utf8");
 
-function embeddedAiSourceFiles() {
-  return readdirSync(DIR).map((f) => ({ name: f, text: readFileSync(join(DIR, f), "utf8") }));
+function embeddedAiSourceFiles(dir = DIR) {
+  const out = [];
+  for (const name of readdirSync(dir)) {
+    const full = join(dir, name);
+    if (statSync(full).isDirectory()) {
+      out.push(...embeddedAiSourceFiles(full));
+    } else if (/\.(js|jsx)$/.test(name)) {
+      out.push({ name, path: full, text: readFileSync(full, "utf8") });
+    }
+  }
+  return out;
 }
 
 /* ------------------------------------------------------------------
@@ -106,10 +115,15 @@ describe("Embedded AI experiment — static guards", () => {
  * phase-2 entry criteria live in the docs instead.
  * ------------------------------------------------------------------ */
 describe("Embedded AI phase 1.5 — vendor-neutral src + engine docs", () => {
-  it("keeps engine/vendor names out of the feature source", () => {
-    // Concrete engine candidates must be named in docs, not src.
+  it("keeps engine/vendor names out of the general feature source", () => {
+    // Concrete engine candidates must be named in docs, not src — EXCEPT the
+    // engines/ adapters/loaders, which are exactly where a chosen engine
+    // (e.g. the phase-3B WebLLM loader) is allowed to name its package.
     const engineNameRe = /web-?llm|transformers|mediapipe|onnxruntime|tvmjs|\bllama\b|ollama/i;
     for (const f of embeddedAiSourceFiles()) {
+      const rel = f.path.replace(/\\/g, "/");
+      // engines/ holds the chosen engine; the PoC panel is the engine spike UI.
+      if (rel.includes("/engines/") || f.name === "EmbeddedAiPocPanel.jsx") continue;
       expect(f.text, `${f.name} should be vendor-neutral`).not.toMatch(engineNameRe);
     }
   });

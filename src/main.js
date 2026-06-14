@@ -39,6 +39,7 @@ import "./services/oxHelpers.js"; // -> window.__oxBg / __oxPbg / __oxAv / __oxS
 // matcher only — it pulls in no React, no panel, and no AI code, so normal
 // startup and the initial bundle are unaffected.
 import { isEmbeddedAiProbeUrl } from "./features/embeddedAi/embeddedAiProbeRoute.js";
+import { isEmbeddedAiPocUrl } from "./features/embeddedAi/embeddedAiPocRoute.js";
 
 // The application. Currently the original production build. Screens are being
 // peeled out of here into src/features/*. The legacy bundle self-mounts the
@@ -50,7 +51,21 @@ function startLegacyApp() {
   );
 }
 
-if (typeof window !== "undefined" && isEmbeddedAiProbeUrl(window.location)) {
+const oriexLocation = typeof window !== "undefined" ? window.location : null;
+
+if (oriexLocation && isEmbeddedAiPocUrl(oriexLocation)) {
+  // Hidden WebGPU PoC route (phase 3A). Separate lazy chunk; never on a normal
+  // visit. Falls back to the normal app on failure (no white screen).
+  import("./features/embeddedAi/mountPoc.jsx")
+    .then((mod) => {
+      if (typeof mod.mountEmbeddedAiPoc === "function") mod.mountEmbeddedAiPoc();
+      else startLegacyApp();
+    })
+    .catch((err) => {
+      console.warn("[oriex] embedded AI PoC failed to load", err);
+      startLegacyApp();
+    });
+} else if (oriexLocation && isEmbeddedAiProbeUrl(oriexLocation)) {
   // Diagnostic-only route: mount the device probe instead of the normal app.
   // The probe panel + React are a separate lazy chunk, so they never load on a
   // normal visit. On any failure, fall back to the normal app (no white screen).

@@ -107,6 +107,45 @@
 - [x] Added `test/embeddedAiDeviceResultsDocs.test.js` (file exists, probe URLs, device rows, required columns, privacy note, phase-3 criteria, linked from README/plan).
 - [ ] The table is intentionally empty until measured on real devices.
 
+## Embedded (on-device) AI experiment phase 2.7 device results recorded (2026-06-14)
+- [x] Recorded real-device probe results in `docs/EMBEDDED_AI_DEVICE_RESULTS.md` (table rows + detail log). Android Chrome (Pixel 9): readiness likely, WebGPU true, IndexedDB true, quota 10244 MB, usage 4 MB, secure context true, deviceMemory 16, hardwareConcurrency 12. iPhone Safari: readiness likely, WebGPU true, IndexedDB true, quota 39322 MB, usage 3 MB, secure context true, deviceMemory unknown, hardwareConcurrency 4. No personal data recorded.
+- [x] Added a phase-3 direction: both devices likely + WebGPU true + IndexedDB true, so a WebGPU-style engine can be the first candidate, with a Transformers.js-style small model kept as a fallback (model size / speed / memory / real iOS Safari performance still unverified).
+- [x] Updated `docs/EMBEDDED_AI_PLAN.md` (Phase 2 Device Results summary) and `README.md`.
+- [x] Docs-only: no real AI model/engine, no npm dependency added. `EMBEDDED_AI_UI_ENABLED` / `EMBEDDED_AI_PROBE_ENABLED` stay `false`, normal UI unchanged, legacy boot preserved.
+- [x] Updated `test/embeddedAiDeviceResultsDocs.test.js` to assert the Android Chrome / iPhone Safari likely results, WebGPU/IndexedDB true, and the WebGPU-first + Transformers.js-fallback phase-3 direction.
+- [ ] PC Chrome and PWA/offline rows still unmeasured; real engine selection happens in phase 3.
+
+## Embedded (on-device) AI experiment phase 3A WebGPU PoC scaffold (2026-06-14)
+- [x] Decision: real WebGPU engine DEFERRED to phase 3B. No AI library / dependency / model added (heavy lib + large model weights + unverified real iOS Safari throughput + build/chunk risk). Deferring is the safe call.
+- [x] Added `src/features/embeddedAi/engines/webGpuEngineAdapter.js`: a swappable seam (`loadWebGpuEmbeddedAiEngine`, `generateWithWebGpuEmbeddedAi`, `registerWebGpuEngineLoader`, `resetWebGpuEmbeddedAiEngineForTests`). No static engine-lib import; gates on WebGPU + IndexedDB; shares one in-flight load; clamps input to 800; returns graceful `{ ok:false, reason }` (`engine-not-bundled` until wired). Vendor-neutral.
+- [x] Added a hidden PoC route (option B): `embeddedAiPocRoute.js` (`?oriexProbe=embedded-ai-poc` / `#embedded-ai-poc`), `EmbeddedAiPocPanel.jsx`, `mountPoc.jsx`. `src/main.js` dynamic-imports the PoC mount only behind the URL gate (checked before the probe route), preserves legacy boot for normal visits, no `App.jsx` entry, no `createRoot(`/JSX in the `.js` entry.
+- [x] Added `EMBEDDED_AI_POC_ENABLED = false`. Even via the hidden URL, generation runs only when intentionally enabled in source for local dev; the panel otherwise shows it is disabled. Notices shown: experiment, first-run model time, data/battery use, input not sent to external AI APIs, no auto-save, learning data safe.
+- [x] Security: PoC stores no prompts (no `localStorage`), sends nothing (no fetch/XHR/beacon/Firebase), no external AI endpoint/API key, no external AI vendor name in source, output rendered as plain `{text}` (no `dangerouslySetInnerHTML`/`innerHTML`).
+- [x] Updated `docs/EMBEDDED_AI_PLAN.md` (Phase 3A WebGPU PoC: deferral reasons, model-fetch vs input-send, phase-3B wiring), `docs/EMBEDDED_AI_DEVICE_RESULTS.md`, `docs/SECURITY_CHECKLIST.md`, `README.md`.
+- [x] Added `test/embeddedAiWebGpuEngine.test.js` (device gating, engine-not-bundled, pluggable engine, shared load, graceful failure, input clamp, plain-text reasons) and `test/embeddedAiPocStatic.test.js` (files exist, flags false, no heavy static import, no external endpoint/key, no store/send, no HTML sink, hidden-URL only, docs direction). Updated `test/embeddedAiStatic.test.js` source scanner to recurse into `engines/`.
+- [ ] Real engine selection + on-device model size/speed/memory/iOS-Safari throughput verification still pending (phase 3B).
+
+## Embedded (on-device) AI experiment phase 3B WebLLM spike (2026-06-14)
+- [x] Dependency added (kept): `@mlc-ai/web-llm` 0.2.84. Installs cleanly; build / test / security:scan pass; npm audit 0 vulnerabilities. No model weights committed.
+- [x] Model id `Qwen2.5-0.5B-Instruct-q4f16_1-MLC` chosen from the installed package's `prebuiltAppConfig.model_list` (0.5B / q4f16 / low_resource_required / ~945 MB VRAM) — verified, not guessed. API verified: `CreateMLCEngine` + `engine.chat.completions.create`.
+- [x] Added `src/features/embeddedAi/engines/webLlmEngineLoader.js`: registers a loader into the WebGPU adapter; `@mlc-ai/web-llm` is imported ONLY via dynamic `import()` inside the loader (never at module top level). Output trimmed to ≤3 lines plain text. Model/runtime sources documented (Hugging Face weights + MLC libs host); input text is never sent there.
+- [x] Updated `EmbeddedAiPocPanel.jsx`: registers the engine on mount (cheap, imports nothing); model loads only on the explicit "モデルを読み込む" button; shows model id, progress, load/generate timings, success/failure, and a copyable diagnostic log. Buttons gated by `EMBEDDED_AI_POC_ENABLED` (option A: stays false). Plain `{text}` output, no raw-HTML sinks, no localStorage, no Firebase, no fetch.
+- [x] Build: `@mlc-ai/web-llm` emits as a separate lazy chunk (~6 MB / gzip ~2.1 MB), reached only through the dynamic import; `index.html` does not reference it and the initial `index` chunk does not contain it. Opening the PoC page loads no model.
+- [x] Flags unchanged: `EMBEDDED_AI_UI_ENABLED` / `EMBEDDED_AI_PROBE_ENABLED` / `EMBEDDED_AI_POC_ENABLED` all `false`. Not in TABS/normal nav. Legacy boot preserved; Ollama + paused Local AI UI untouched.
+- [x] Added `test/embeddedAiWebLlmEngine.test.js` (no static heavy import, dynamic import present, verified model id, device-gated load returns before importing the lib, idempotent registration, package.json has the dep, panel loads only via button) and updated `test/embeddedAiPocStatic.test.js` / `test/embeddedAiStatic.test.js` (vendor-neutral scan excludes engines/ + the PoC spike panel).
+- [x] Updated `docs/EMBEDDED_AI_PLAN.md` (Phase 3B WebLLM Spike), `docs/EMBEDDED_AI_DEVICE_RESULTS.md` (3B measurement template), `docs/SECURITY_CHECKLIST.md`, `README.md`.
+- [ ] Real-device measurements (load time / generate time / memory / failure rate on Android Chrome + iPhone Safari) still pending; done by temporarily flipping `EMBEDDED_AI_POC_ENABLED` to true in local dev and exercising the hidden PoC URL. If iOS Safari is poor, fall back to a Transformers.js-style small model and consider reverting the dependency.
+
+## Embedded (on-device) AI experiment phase 3C WebLLM device spike (2026-06-14)
+- [x] Verification-branch spike. `EMBEDDED_AI_POC_ENABLED` set to `true` TEMPORARILY (device-spike branch) so the hidden PoC URL can load/generate on a real phone. `EMBEDDED_AI_UI_ENABLED` / `EMBEDDED_AI_PROBE_ENABLED` stay `false`. MUST be reset to false before merging to main. PoC still not in TABS / normal nav; hidden-URL only.
+- [x] Strengthened the PoC measurement log: added `src/features/embeddedAi/embeddedAiPocLog.js` (`buildPocDiagnostic`) — a pure plain-text builder covering timestamp, device summary, userAgent, readiness, WebGPU, IndexedDB, secureContext, online, model id, load start/finish/duration, first-or-cached, generation start/finish/duration, success/error, input length, output length, storage quota + usage before/after.
+- [x] The log contains lengths/metrics only and NEVER the input body: the panel passes `inputLength: clamped.length`, not the memo text. Not persisted to browser storage, not sent to any backend.
+- [x] PoC panel now collects a device snapshot + storage usage before/after load (via the existing probe report), times load and generation, and shows the diagnostic for manual copy. Output still plain `{text}`, no raw-HTML sinks. Model load only on explicit button; page open loads nothing.
+- [x] Added the Phase 3C measurement table + fixed no-personal-data sample input to `docs/EMBEDDED_AI_DEVICE_RESULTS.md`; updated `docs/EMBEDDED_AI_PLAN.md` (Phase 3C section) and `README.md`.
+- [x] Added `test/embeddedAiPocLog.test.js` (diagnostic includes lengths/metrics, never the body) and updated `test/embeddedAiPocStatic.test.js` (UI/probe flags false; POC flag boolean, not pinned false on the spike branch; panel logs lengths not memo).
+- [x] Build: `@mlc-ai/web-llm` stays a separate lazy chunk; `index.html` does not reference it; initial chunk has no model body.
+- [ ] Actual Android Chrome / iPhone Safari numbers are not filled in (require physical devices). Table left blank for manual entry. Reset `EMBEDDED_AI_POC_ENABLED = false` before merging to main.
+
 ## Firebase read hardening (2026-06-14)
 - [x] Other bug checks focused on Firebase/read paths, repository guardrails, polling, and non-legacy dangerous read patterns.
 - [x] `readCache` now deduplicates same-key in-flight reads, so two screens requesting the same Firestore target at the same moment share one fetch.
@@ -325,3 +364,12 @@
 - **選択中カード**の border / label / underline が accent 系で色づくか。
 - **未選択カード**のアイコン背景が薄く（softBg/accent-soft）色づくか。
 - **スマホ幅**でも色抜け・色化けしないか（折返し時含む）。
+
+## Embedded AI Phase 3C Deploy Prep (2026-06-15)
+
+- [x] Prepared `embedded-ai-webllm-device-spike` as a verification-only branch with `EMBEDDED_AI_POC_ENABLED = true` temporarily enabled for WebLLM PoC real-device checks.
+- [x] Kept `EMBEDDED_AI_UI_ENABLED = false` and `EMBEDDED_AI_PROBE_ENABLED = false`; the PoC is not in normal UI, TABS, or navigation. Legacy startup remains the normal route.
+- [x] Confirmed GitHub Pages auto-deploy is `main` only. Branch push will not auto-deploy; use `workflow_dispatch` on the existing Deploy to GitHub Pages workflow from the spike branch for temporary testing, then redeploy `main`.
+- [x] Updated the Phase 3C table for PC Chrome first, then iPhone Safari. Android is explicitly `Not tested` for this pass.
+- [x] Documented that no personal information should be entered and that input text / generated text are not stored in localStorage, Firebase, or sent to an external AI API.
+- [ ] Actual PC Chrome / iPhone Safari measurements still require physical devices. Reset `EMBEDDED_AI_POC_ENABLED = false` before any main merge.

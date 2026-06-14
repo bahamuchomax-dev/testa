@@ -28,6 +28,9 @@
 - [ ] プローブは権限要求しない（位置情報・連絡先・写真・マイク・カメラを要求しない）。
 - [ ] プローブは未マウント（`EMBEDDED_AI_PROBE_ENABLED = false`、通常UI未表示）。診断結果はコピー用テキスト表示のみ。
 - [ ] 診断は明示URL（`?oriexProbe=embedded-ai` / `#embedded-ai-probe`）でのみ開く。通常アクセスは legacy 起動のまま、診断chunkを読み込まない。診断UIは dynamic import で別chunk。
+- [ ] フェーズ3A WebGPU PoC は adapter のみで実エンジン/モデル/依存を未追加。`EMBEDDED_AI_POC_ENABLED = false`、通常UI/TABS未表示、隠しURL（`?oriexProbe=embedded-ai-poc` / `#embedded-ai-poc`）でのみ到達、dynamic importで別chunk。
+- [ ] PoCはプロンプトを `localStorage` 等に保存しない、結果を Firebase等へ自動送信しない、入力文を外部AI APIへ送らない、生成結果をHTMLとして描画しない。モデル取得先を使う場合は docs に明記し入力は送らない。
+- [ ] フェーズ3B WebLLM（`@mlc-ai/web-llm`）は隠しPoC URLでのみ・ユーザー押下時だけ動的import。トップレベルで重いライブラリをimportしない。初期bundle非同梱（`index.html`非参照）。モデル/ランタイム取得先（Hugging Face / MLC libs host）をdocsに明記。取得はモデル/重み取得であり入力文の送信ではない。IndexedDB/Cache Storageに入るのはモデル/ランタイムのみ。`@mlc-ai/web-llm` は外部AI APIではない。
 
 ## PDF
 
