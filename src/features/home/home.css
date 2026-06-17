@@ -41,10 +41,11 @@ html:has(.oxh),body:has(.oxh),#root:has(.oxh){background:#0a0c14 !important;}
   background:radial-gradient(circle,rgba(232,39,60,.36),transparent 62%);filter:blur(9px);}
 
 /* layout: fixed-height HERO (character + profile + today) then a flowing BODY ---
-   HERO height ends at the character's VISIBLE feet (~494px = top 18 + 86.7% of the
-   544 box), so the body sits right under the figure with no big transparent gap.
-   The character box's transparent tail (494–562) just sits behind the body cards. */
-.oxh-hero{position:relative;z-index:3;min-height:494px;display:flex;flex-direction:column;gap:10px;
+   HERO reserves less than the figure's full height so the BODY (greeting banner +
+   cards + tools) rises up against the figure's lower legs (glass cards overlap the
+   character, same as the profile/today cards) — keeps the lower content high, no
+   big transparent gap. The character box's tail just sits behind the body cards. */
+.oxh-hero{position:relative;z-index:3;min-height:452px;display:flex;flex-direction:column;gap:10px;
   padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 0;}
 .oxh-body{position:relative;z-index:3;display:flex;flex-direction:column;gap:14px;padding:12px 14px 0;}
 

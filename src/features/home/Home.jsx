@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 // Real assets (Vite hashes + base-path-rewrites these, so GitHub Pages base works).
 import bgUrl from "../../assets/home/1BA16E71-040A-4ADD-8EE6-383D57E63E42.png";
-import charUrl from "../../assets/home/IMG_5012.png";
+import charUrl from "../../assets/home/IMG_5074.png";
 
 // Feature views — each is a self-contained screen.
 import AnalysisView from "./views/AnalysisView.jsx";
