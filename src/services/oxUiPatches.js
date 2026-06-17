@@ -388,7 +388,7 @@ function hideSectionsOnce(headings) {
 // Never on the React home (#root holds .oxh). Idempotent; the run loop re-applies.
 const HOME_SWITCH_ID = "ox-newhome-switch";
 const HOME_CODE_ID = "ox-newhome-code";
-const HOME_CODE_DEFAULT = "ORIEX2026";
+const HOME_CODE_DEFAULT = "UMAMUSUME";
 const HOME_UNLOCKED_KEY = "oriexHomeCodeUnlocked";
 
 function expectedHomeCode() {
