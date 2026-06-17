@@ -17,7 +17,7 @@
   position:relative;width:100%;max-width:390px;margin:0 auto;height:100%;
   overflow-y:auto;overflow-x:clip;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
   scrollbar-width:none;background:var(--bg);color:var(--ink);
-  padding-bottom:calc(env(safe-area-inset-bottom,0px) + 96px);
+  padding-bottom:calc(env(safe-area-inset-bottom,0px) + 108px);
   font-family:"Zen Kaku Gothic New",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;}
 .oxh::-webkit-scrollbar{display:none;}
 /* Fill the page behind the (max-width) home so wider phones don't show the legacy
@@ -169,7 +169,7 @@ html:has(.oxh),body:has(.oxh),#root:has(.oxh){background:#0a0c14 !important;}
 /* sub-view (準備中 / open-in-original) ---------------------------------------- */
 .oxh-sub{position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:390px;z-index:8;
   display:flex;flex-direction:column;background:var(--bg);
-  padding:calc(env(safe-area-inset-top,0px) + 14px) 16px calc(env(safe-area-inset-bottom,0px) + 92px);}
+  padding:calc(env(safe-area-inset-top,0px) + 14px) 16px calc(env(safe-area-inset-bottom,0px) + 104px);}
 .oxh-sub-head{display:flex;align-items:center;gap:10px;}
 .oxh-back{width:38px;height:38px;flex:none;border:none;border-radius:50%;display:grid;place-items:center;
   background:rgba(22,26,40,.8);border:1px solid var(--line);color:#eef1fb;}
@@ -197,11 +197,11 @@ html:has(.oxh),body:has(.oxh),#root:has(.oxh){background:#0a0c14 !important;}
 
 /* bottom nav — fixed, always visible (floating pill) ------------------------- */
 .oxh-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 8px);
-  width:calc(100% - 24px);max-width:366px;z-index:40;display:flex;background:var(--glass-2);border:1px solid var(--line);
-  border-radius:20px;padding:7px 6px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 10px 26px rgba(0,0,0,.5);}
-.oxh-nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:none;
-  color:var(--muted);font-size:9.5px;font-weight:800;position:relative;}
-.oxh-nav button svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+  width:calc(100% - 24px);max-width:372px;z-index:40;display:flex;background:var(--glass-2);border:1px solid var(--line);
+  border-radius:22px;padding:9px 7px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 10px 26px rgba(0,0,0,.5);}
+.oxh-nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;
+  color:var(--muted);font-size:10.5px;font-weight:800;position:relative;padding:6px 0;border-radius:14px;}
+.oxh-nav button svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .oxh-nav button.oxh-navon{color:#fff;}
-.oxh-nav button.oxh-navon .oxh-pill{position:absolute;top:-3px;width:42px;height:30px;border-radius:12px;background:rgba(232,39,60,.22);z-index:-1;}
-.oxh-nd{position:absolute;top:-1px;right:14px;width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px var(--glass-2);}
+.oxh-nav button.oxh-navon .oxh-pill{position:absolute;top:1px;width:54px;height:40px;border-radius:14px;background:rgba(232,39,60,.22);z-index:-1;}
+.oxh-nd{position:absolute;top:3px;right:16px;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px var(--glass-2);}
