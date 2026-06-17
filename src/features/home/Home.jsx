@@ -285,7 +285,7 @@ export default function Home({ profile, onOpen = () => {} } = {}) {
   const navActive = NAV.some((n) => n.key === view) ? view : "home";
 
   return (
-    <div className="oxh">
+    <div className={view === "home" ? "oxh" : "oxh oxh-subview"}>
       <div className="oxh-bg" style={{ backgroundImage: `url(${bgUrl})` }} />
       <div className="oxh-glow" />
       <div className="oxh-char" style={{ backgroundImage: `url(${charUrl})` }} />

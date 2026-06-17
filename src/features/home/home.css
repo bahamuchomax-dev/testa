@@ -19,6 +19,11 @@
   scrollbar-width:none;background:var(--bg);color:var(--ink);
   padding-bottom:calc(env(safe-area-inset-bottom,0px) + 108px);
   font-family:"Zen Kaku Gothic New",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;}
+/* While a sub-view (.oxh-sub, position:fixed) is open, .oxh must NOT be a scroll
+   container — its -webkit-overflow-scrolling:touch traps the fixed sub-view and
+   fights the inner .oxv-body scroll on iOS (content clipped, can't scroll). Drop
+   .oxh's own scroll so .oxv-body is the single clean scroll area. */
+.oxh.oxh-subview{overflow:hidden;-webkit-overflow-scrolling:auto;}
 .oxh::-webkit-scrollbar{display:none;}
 /* Fill the page behind the (max-width) home so wider phones don't show the legacy
    cream gutters on the left/right — match the home's dark canvas. */
