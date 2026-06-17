@@ -155,7 +155,15 @@ const NAV = [
   { key: "timer", label: "タイマー", icon: <><circle cx="12" cy="13" r="8" /><path d="M12 9v4l3 2M9 2h6" /></> },
   { key: "records", label: "記録", icon: <path d="M4 20V9M10 20V4M16 20v-8M22 20H2" /> },
   { key: "analysis", label: "分析", icon: <><path d="M12 3a9 9 0 109 9h-9z" /><path d="M12 3v9h9" /></> },
-  { key: "profile", label: "マイページ", icon: <path d="M7 5c-1.5 1.4-2.5 3.6-2.5 6 0 4 3 7.5 7.5 7.5s7.5-3.5 7.5-7.5c0-2.4-1-4.6-2.5-6" />, dot: true },
+  { key: "profile", label: "マイページ", dot: true, icon: (
+    <>
+      <path d="M7.6 4.6C5.5 6.1 4.2 8.5 4.2 11.5c0 4.5 3.5 8 7.8 8s7.8-3.5 7.8-8c0-3-1.3-5.4-3.4-6.9" />
+      <circle cx="6.1" cy="13.2" r="0.9" fill="currentColor" stroke="none" />
+      <circle cx="7.9" cy="16.6" r="0.9" fill="currentColor" stroke="none" />
+      <circle cx="17.9" cy="13.2" r="0.9" fill="currentColor" stroke="none" />
+      <circle cx="16.1" cy="16.6" r="0.9" fill="currentColor" stroke="none" />
+    </>
+  ) },
 ];
 
 // Destination kind. Most keys now render a real in-home React view (see VIEWS),
@@ -403,11 +411,15 @@ export default function Home({ profile, onOpen = () => {} } = {}) {
       {/* bottom nav — fixed, always visible */}
       <nav className="oxh-nav" aria-label="メインナビ">
         {NAV.map((n) => (
-          <button key={n.key} className={n.key === navActive ? "oxh-navon" : ""} onClick={() => go(n.key)}>
-            {n.key === navActive && <span className="oxh-pill" />}
+          <button
+            key={n.key}
+            className={n.key === navActive ? "oxh-navon" : ""}
+            onClick={() => go(n.key)}
+            aria-label={n.label}
+            aria-current={n.key === navActive ? "page" : undefined}
+          >
             {n.dot && <span className="oxh-nd" />}
             <svg viewBox="0 0 24 24">{n.icon}</svg>
-            {n.label}
           </button>
         ))}
       </nav>

@@ -198,13 +198,19 @@ html:has(.oxh),body:has(.oxh),#root:has(.oxh){background:#0a0c14 !important;}
    layout squashing cards (which clipped .oxv-pf-hero via its overflow:hidden). */
 .oxv-body > *{flex-shrink:0;}
 
-/* bottom nav — fixed, always visible (floating pill) ------------------------- */
-.oxh-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 8px);
-  width:calc(100% - 24px);max-width:372px;z-index:40;display:flex;background:var(--glass-2);border:1px solid var(--line);
-  border-radius:22px;padding:9px 7px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 10px 26px rgba(0,0,0,.5);}
-.oxh-nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;
-  color:var(--muted);font-size:10.5px;font-weight:800;position:relative;padding:6px 0;border-radius:14px;}
-.oxh-nav button svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.oxh-nav button.oxh-navon{color:#fff;}
-.oxh-nav button.oxh-navon .oxh-pill{position:absolute;top:1px;width:54px;height:40px;border-radius:14px;background:rgba(232,39,60,.22);z-index:-1;}
-.oxh-nd{position:absolute;top:3px;right:16px;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px var(--glass-2);}
+/* bottom nav — fixed row of dark CIRCULAR icon buttons (per the reference) ---- */
+.oxh-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 12px);
+  width:calc(100% - 28px);max-width:372px;z-index:40;display:flex;justify-content:space-between;align-items:center;
+  gap:8px;background:none;border:none;padding:0;}
+.oxh-nav button{flex:0 0 auto;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;position:relative;
+  color:#cfd6ea;font-size:0;border:1px solid var(--line);
+  background:radial-gradient(120% 120% at 35% 22%,#2b3040,#13161f 64%,#0a0c12);
+  box-shadow:0 6px 16px rgba(0,0,0,.5),inset 0 1px 1px rgba(255,255,255,.14);
+  transition:transform .12s ease,color .15s ease;}
+.oxh-nav button:active{transform:scale(.94);}
+.oxh-nav button svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.oxh-nav button.oxh-navon{color:#fff;border-color:rgba(255,120,130,.5);
+  background:radial-gradient(120% 120% at 35% 22%,#ff5566,#b3142a 72%);
+  box-shadow:0 7px 18px rgba(179,20,42,.5),inset 0 1px 1px rgba(255,255,255,.28);}
+.oxh-nav button:focus-visible{outline:2.5px solid var(--blue);outline-offset:2px;}
+.oxh-nd{position:absolute;top:3px;right:3px;width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px #0a0c14;z-index:1;}
