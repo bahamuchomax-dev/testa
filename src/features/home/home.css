@@ -47,7 +47,7 @@ html:has(.oxh),body:has(.oxh),#root:has(.oxh){background:#0a0c14 !important;}
    big transparent gap. The character box's tail just sits behind the body cards. */
 .oxh-hero{position:relative;z-index:3;min-height:452px;display:flex;flex-direction:column;gap:10px;
   padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 0;}
-.oxh-body{position:relative;z-index:3;display:flex;flex-direction:column;gap:14px;padding:12px 14px 0;}
+.oxh-body{position:relative;z-index:3;display:flex;flex-direction:column;gap:14px;padding:14px 14px 0;}
 
 /* top bar -------------------------------------------------------------------- */
 .oxh-top{display:flex;align-items:center;gap:9px;}
@@ -90,7 +90,7 @@ html:has(.oxh),body:has(.oxh),#root:has(.oxh){background:#0a0c14 !important;}
 .oxh-stat-s.oxh-gold{color:var(--gold);}
 
 /* today card — compact, narrower than half the frame; timer sits INSIDE -------- */
-.oxh-today{position:absolute;right:12px;top:362px;width:180px;z-index:5;}
+.oxh-today{position:absolute;right:14px;top:362px;width:180px;z-index:5;}
 .oxh-today-card{position:relative;background:var(--glass-2);border:1px solid var(--line);border-radius:15px;
   padding:9px 66px 10px 12px;backdrop-filter:blur(13px);-webkit-backdrop-filter:blur(13px);box-shadow:0 12px 28px rgba(0,0,0,.45);}
 .oxh-today-h{font-size:11px;font-weight:900;color:#ff8a96;display:flex;align-items:center;gap:4px;font-family:"Zen Maru Gothic",sans-serif;}
