@@ -8,6 +8,7 @@ import {
   subjectBreakdown,
   fmtMinutes,
 } from "../studyStore.js";
+import { getAccount, accountAvatarImg } from "../realAccount.js";
 
 /* ============================================================
  * ProfileView — マイページ (profile / 実績)
@@ -22,7 +23,7 @@ import {
  * No emoji — icons are inline <svg> only.
  * ============================================================ */
 
-const NAME = "ヒカリ";
+const FALLBACK_NAME = "ヒカリ";
 
 /* ---- inline icons (line svg, no emoji) ---------------------------------- */
 const IcClock = (
@@ -116,6 +117,11 @@ const LINKS = [
 export default function ProfileView({ onBack, onOpen }) {
   const st = useStudy();
 
+  // Identity is the REAL signed-in account (same as the home), not a placeholder.
+  const acct = getAccount();
+  const name = (acct && acct.name) || FALLBACK_NAME;
+  const avatarImg = accountAvatarImg(acct);
+
   const lv = level(st);
   const total = totalMinutes(st);
   const streak = streakDays(st);
@@ -126,7 +132,7 @@ export default function ProfileView({ onBack, onOpen }) {
   // minutes left until the next level (a level every 10h = 600 min)
   const toNext = Math.max(0, lv.level * 600 - lv.xp);
   const maxSub = breakdown.length ? breakdown[0].minutes : 1;
-  const initial = Array.from(NAME)[0] || NAME;
+  const initial = Array.from(name)[0] || name;
 
   const stats = [
     { key: "total", label: "累計", value: fmtMinutes(total), icon: IcClock, tone: "red" },
@@ -163,10 +169,12 @@ export default function ProfileView({ onBack, onOpen }) {
           <div className="oxv-pf-glow" aria-hidden="true" />
           <div className="oxv-pf-id">
             <div className="oxv-pf-ring" aria-hidden="true">
-              <div className="oxv-pf-avatar">{initial}</div>
+              <div className="oxv-pf-avatar">
+                {avatarImg ? <img className="oxv-pf-avatar-img" src={avatarImg} alt="" /> : initial}
+              </div>
             </div>
             <div className="oxv-pf-who">
-              <span className="oxv-pf-name">{NAME}</span>
+              <span className="oxv-pf-name">{name}</span>
               <span className="oxv-pf-lvtag">Lv.{lv.level}</span>
             </div>
           </div>

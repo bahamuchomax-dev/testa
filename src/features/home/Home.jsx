@@ -142,11 +142,11 @@ const TOOL_ICONS = {
 const TOOLS = [
   { key: "note", label: "ノート", tone: "oxh-t-red" },
   { key: "vocab", label: "単語帳", tone: "oxh-t-blue" },
-  { key: "card", label: "暗記", tone: "oxh-t-purple" },
+  { key: "card", label: "暗記カード", tone: "oxh-t-purple" },
   { key: "quiz", label: "問題集", tone: "oxh-t-crim" },
-  { key: "exam", label: "模試", tone: "oxh-t-teal" },
+  { key: "exam", label: "模試", tone: "oxh-t-blue" },
   { key: "listen", label: "リスニング", tone: "oxh-t-orange" },
-  { key: "calendar", label: "暦", tone: "oxh-t-green" },
+  { key: "calendar", label: "カレンダー", tone: "oxh-t-teal" },
   { key: "more", label: "その他", tone: "oxh-t-gray" },
 ];
 
@@ -394,9 +394,9 @@ export default function Home({ profile, onOpen = () => {} } = {}) {
 
             <div className="oxh-tools">
               {TOOLS.map((t) => (
-                <button className="oxh-tool" key={t.key} onClick={() => go(t.key)}>
-                  <span className={`oxh-tool-ic ${t.tone}`}><svg viewBox="0 0 24 24">{TOOL_ICONS[t.key]}</svg></span>
-                  {t.label}
+                <button className={`oxh-tool ${t.tone}`} key={t.key} onClick={() => go(t.key)}>
+                  <span className="oxh-tool-ic"><svg viewBox="0 0 24 24">{TOOL_ICONS[t.key]}</svg></span>
+                  <span className="oxh-tool-lb">{t.label}</span>
                 </button>
               ))}
             </div>

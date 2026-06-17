@@ -62,12 +62,19 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
+  overflow: hidden;
   font-family: "Zen Maru Gothic", sans-serif;
   font-weight: 900;
   font-size: 26px;
   color: #fff;
   background: linear-gradient(160deg, #1b2030, #0c0f1a);
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.oxv-pf .oxv-pf-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .oxv-pf .oxv-pf-who {
   display: flex;
