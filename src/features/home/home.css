@@ -44,7 +44,9 @@ html:has(.oxh),body:has(.oxh),#root:has(.oxh){background:#0a0c14 !important;}
 /* character — LANDSCAPE sticker, trimmed tight (1135x884). Fit to the full frame
    width so the whole figure shows (no cutoff) with minimal margin; aspect-ratio
    keeps it correct on any width. */
-.oxh-char{position:absolute;left:0;right:0;top:96px;width:100%;aspect-ratio:1135/884;z-index:1;pointer-events:none;
+/* bigger & bolder: bleed ~13% off each side (legs/tail run off-frame on purpose),
+   head kept just below the top bar. */
+.oxh-char{position:absolute;left:-13%;right:-13%;top:90px;aspect-ratio:1135/884;z-index:1;pointer-events:none;
   background-position:top center;background-size:contain;background-repeat:no-repeat;
   filter:drop-shadow(-8px 12px 22px rgba(0,0,0,.5));}
 .oxh-glow{position:absolute;right:-20px;top:60px;width:300px;height:300px;z-index:0;border-radius:50%;
@@ -186,7 +188,9 @@ html:has(.oxh),body:has(.oxh),#root:has(.oxh){background:#0a0c14 !important;}
    scroll layer breaks its inner .oxv-body scroll on iOS. With .oxh-subview making
    .oxh overflow:hidden (non-scrolling), absolute inset:0 fills the viewport and
    .oxv-body scrolls cleanly. */
-.oxh-sub{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:390px;z-index:8;
+/* NO transform here: iOS breaks overflow scrolling inside a transformed element,
+   which kept .oxv-body from scrolling. Center with auto margins instead. */
+.oxh-sub{position:absolute;top:0;bottom:0;left:0;right:0;width:100%;max-width:390px;margin:0 auto;z-index:8;
   display:flex;flex-direction:column;background:var(--bg);
   padding:calc(env(safe-area-inset-top,0px) + 14px) 16px calc(env(safe-area-inset-bottom,0px) + 8px);}
 .oxh-sub-head{display:flex;align-items:center;gap:10px;}
