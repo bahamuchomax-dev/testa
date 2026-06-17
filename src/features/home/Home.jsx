@@ -115,6 +115,18 @@ const Sparkle = (
     <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
   </svg>
 );
+const Sun = (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="12" cy="12" r="4.2" fill="#ffd36e" stroke="none" />
+    <path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.2 5.2l1.8 1.8M17 17l1.8 1.8M18.8 5.2L17 7M7 17l-1.8 1.8"
+      stroke="#ffd36e" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+const Moon = (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M20 14.5A8 8 0 119.5 4a6.4 6.4 0 0010.5 10.5z" fill="#9fc0ff" stroke="none" />
+  </svg>
+);
 
 const TOOL_ICONS = {
   note: <><path d="M7 4h8l4 4v12H7z" fill="none" /><path d="M9 10h6M9 14h6" /></>,
@@ -178,6 +190,17 @@ const VIEWS = {
 
 const DOW = ["日", "月", "火", "水", "木", "金", "土"];
 
+// あいさつバナー — 時間帯であいさつと一言が変わる（朝/昼/夜）。name は実アカウント名。
+function greetingFor(name) {
+  const h = new Date().getHours();
+  const who = (name || "").trim() || "あなた";
+  if (h < 5)  return { hi: `おつかれさま、${who}`, sub: "無理は禁物。少しだけ進めて、ゆっくり休もう。", night: true };
+  if (h < 11) return { hi: `おはよう、${who}`,     sub: "今日もコツコツ積み上げて、理想の自分に近づこう！", night: false };
+  if (h < 17) return { hi: `こんにちは、${who}`,   sub: "いまの一歩が、未来の自分をつくる。", night: false };
+  if (h < 22) return { hi: `こんばんは、${who}`,   sub: "今日のがんばり、しっかり記録しておこう。", night: true };
+  return { hi: `こんばんは、${who}`, sub: "無理は禁物。少しだけ進めて、ゆっくり休もう。", night: true };
+}
+
 // The user's real weekly plan (written by PlansView → localStorage "oxhPlans",
 // keyed Mon..Sun). Flattened for the home's 今週の予定 card; null when none yet.
 function readWeekPlans() {
@@ -238,6 +261,7 @@ export default function Home({ profile, onOpen = () => {} } = {}) {
   const planDone = planList.filter((x) => x.done).length;
   const planTotal = planList.length;
   const initial = (p.name || "G").trim().charAt(0) || "G";
+  const greet = greetingFor(p.name);
 
   const go = (key) => {
     try { onOpen(key); } catch { /* ignore */ }
@@ -313,6 +337,18 @@ export default function Home({ profile, onOpen = () => {} } = {}) {
 
           {/* BODY — flows below the hero and scrolls */}
           <div className="oxh-body">
+            {/* greeting banner — time-aware こんにちは + 一言, taps through to マイページ */}
+            <button className="oxh-greet" onClick={() => go("profile")}>
+              <span className="oxh-greet-av">
+                {avatarImg ? <img src={avatarImg} alt="" /> : initial}
+              </span>
+              <span className="oxh-greet-tx">
+                <span className="oxh-greet-hi"><span className="oxh-greet-ic">{greet.night ? Moon : Sun}</span>{greet.hi}！</span>
+                <span className="oxh-greet-sub">{greet.sub}</span>
+              </span>
+              <svg className="oxh-greet-go" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5l6 7-6 7M13 5l6 7-6 7" /></svg>
+            </button>
+
             <div className="oxh-row2">
               <div className="oxh-card">
                 <div className="oxh-card-h">{BarChart}7日間の記録<button className="oxh-more" onClick={() => go("records")}>詳細</button></div>
