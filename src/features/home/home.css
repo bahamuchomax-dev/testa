@@ -24,6 +24,10 @@
    fights the inner .oxv-body scroll on iOS (content clipped, can't scroll). Drop
    .oxh's own scroll so .oxv-body is the single clean scroll area. */
 .oxh.oxh-subview{overflow:hidden;-webkit-overflow-scrolling:auto;}
+/* Sub-views render through a portal to <body> in this .oxh-portal wrapper (reuses
+   .oxh for tokens + the box reset). Being a top-level fixed layer — NOT nested in
+   .oxh's scroll container — lets the inner .oxv-body scroll cleanly on iOS. */
+.oxh.oxh-portal{position:fixed;inset:0;z-index:60;height:auto;overflow:hidden;padding-bottom:0;}
 .oxh::-webkit-scrollbar{display:none;}
 /* Fill the page behind the (max-width) home so wider phones don't show the legacy
    cream gutters on the left/right — match the home's dark canvas. */
@@ -40,7 +44,7 @@ html:has(.oxh),body:has(.oxh),#root:has(.oxh){background:#0a0c14 !important;}
 /* character — LANDSCAPE sticker, trimmed tight (1135x884). Fit to the full frame
    width so the whole figure shows (no cutoff) with minimal margin; aspect-ratio
    keeps it correct on any width. */
-.oxh-char{position:absolute;left:0;right:0;top:58px;width:100%;aspect-ratio:1135/884;z-index:1;pointer-events:none;
+.oxh-char{position:absolute;left:0;right:0;top:96px;width:100%;aspect-ratio:1135/884;z-index:1;pointer-events:none;
   background-position:top center;background-size:contain;background-repeat:no-repeat;
   filter:drop-shadow(-8px 12px 22px rgba(0,0,0,.5));}
 .oxh-glow{position:absolute;right:-20px;top:60px;width:300px;height:300px;z-index:0;border-radius:50%;

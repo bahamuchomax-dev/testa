@@ -1,5 +1,6 @@
 import "./home.css";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 // Real assets (Vite hashes + base-path-rewrites these, so GitHub Pages base works).
 import bgUrl from "../../assets/home/1BA16E71-040A-4ADD-8EE6-383D57E63E42.png";
@@ -284,13 +285,31 @@ export default function Home({ profile, onOpen = () => {} } = {}) {
 
   const navActive = NAV.some((n) => n.key === view) ? view : "home";
 
+  // bottom nav — rendered in the home, or inside the sub-view portal (one at a time)
+  const navEl = (
+    <nav className="oxh-nav" aria-label="メインナビ">
+      {NAV.map((n) => (
+        <button
+          key={n.key}
+          className={n.key === navActive ? "oxh-navon" : ""}
+          onClick={() => go(n.key)}
+          aria-label={n.label}
+          aria-current={n.key === navActive ? "page" : undefined}
+        >
+          {n.key === "profile" && giftCount > 0 && <span className="oxh-nd" />}
+          <svg viewBox="0 0 24 24">{n.icon}</svg>
+        </button>
+      ))}
+    </nav>
+  );
+
   return (
     <div className={view === "home" ? "oxh" : "oxh oxh-subview"}>
       <div className="oxh-bg" style={{ backgroundImage: `url(${bgUrl})` }} />
       <div className="oxh-glow" />
       <div className="oxh-char" style={{ backgroundImage: `url(${charUrl})` }} />
 
-      {view === "home" ? (
+      {view === "home" && (
         <>
           {/* HERO — fixed-height block so the character + overlays hold on any screen */}
           <div className="oxh-hero">
@@ -405,28 +424,22 @@ export default function Home({ profile, onOpen = () => {} } = {}) {
               ))}
             </div>
           </div>
+          {navEl}
         </>
-      ) : VIEWS[view] ? (
-        <FeatureView view={view} onBack={() => setView("home")} onOpen={go} />
-      ) : (
-        <SubView dest={view} onBack={() => setView("home")} />
       )}
 
-      {/* bottom nav — fixed, always visible */}
-      <nav className="oxh-nav" aria-label="メインナビ">
-        {NAV.map((n) => (
-          <button
-            key={n.key}
-            className={n.key === navActive ? "oxh-navon" : ""}
-            onClick={() => go(n.key)}
-            aria-label={n.label}
-            aria-current={n.key === navActive ? "page" : undefined}
-          >
-            {n.key === "profile" && giftCount > 0 && <span className="oxh-nd" />}
-            <svg viewBox="0 0 24 24">{n.icon}</svg>
-          </button>
-        ))}
-      </nav>
+      {view !== "home" &&
+        createPortal(
+          <div className="oxh oxh-portal">
+            {VIEWS[view] ? (
+              <FeatureView view={view} onBack={() => setView("home")} onOpen={go} />
+            ) : (
+              <SubView dest={view} onBack={() => setView("home")} />
+            )}
+            {navEl}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
