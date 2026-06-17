@@ -11,7 +11,8 @@
  * {id:"myPage",label:"マイ"} — see src/legacy/oriex-app.bundle.js). Pure relabel
  * decisions live in nextLabel() so they are unit-tested without a DOM.
  * ============================================================ */
-import { getFrame, frameRing, legendUnlocked } from "../features/home/iconFrames.js";
+import { getFrame, frameRing } from "../features/home/iconFrames.js";
+import { isTeacher } from "../features/home/realAccount.js";
 
 // Exact whole-label renames, keyed by the EXACT trimmed text the bundle renders.
 // Whole-text equality (not substring) so "マイワード" etc. are never touched.
@@ -376,28 +377,85 @@ function hideSectionsOnce(headings) {
   }
 }
 
-// New-home switch placed IN the legacy SETTINGS/account screen, just above the
-// ログアウト button (a stable anchor unique to that screen). Shown only when allowed:
-// teachers anytime (legendUnlocked() already ORs isTeacher), students once they have
-// earned レジェンド, or preview opt-in (oriexHomeToggle). Never on the React home
-// (#root holds .oxh). Idempotent; the run loop re-applies after re-renders.
+// New-home access placed IN the legacy SETTINGS/account screen, just above the
+// ログアウト button (a stable anchor unique to that screen). The new home is unlocked
+// by entering a TEACHER-DISTRIBUTED CODE (replaces the old レジェンド-icon gate):
+//   - unlocked (teacher, or code already entered, or preview opt-in) → show the
+//     「新ホームに切り替える」 button.
+//   - locked → show a code-entry field; the correct code unlocks + opens the new home.
+// The code is a UX gate, not a security boundary (client-side check). Default is
+// HOME_CODE_DEFAULT; an owner can override it at runtime via localStorage.oxhHomeCode.
+// Never on the React home (#root holds .oxh). Idempotent; the run loop re-applies.
 const HOME_SWITCH_ID = "ox-newhome-switch";
+const HOME_CODE_ID = "ox-newhome-code";
+const HOME_CODE_DEFAULT = "ORIEX2026";
+const HOME_UNLOCKED_KEY = "oriexHomeCodeUnlocked";
+
+function expectedHomeCode() {
+  try {
+    const v = window.localStorage.getItem("oxhHomeCode");
+    if (v && v.trim()) return v.trim();
+  } catch {
+    /* ignore */
+  }
+  return HOME_CODE_DEFAULT;
+}
+function homeCodeUnlocked() {
+  try {
+    return window.localStorage.getItem(HOME_UNLOCKED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+function openNewHome() {
+  try {
+    window.localStorage.setItem("oriexHome", "1");
+  } catch {
+    /* ignore */
+  }
+  try {
+    window.location.reload();
+  } catch {
+    /* ignore */
+  }
+}
+function removeNode(el) {
+  if (el && el.parentNode) el.parentNode.removeChild(el);
+}
 
 function injectHomeSwitchInSettingsOnce() {
   try {
     if (typeof document === "undefined" || !document.body) return;
-    const existing = document.getElementById(HOME_SWITCH_ID);
-    let allowed = false;
-    try {
-      allowed = legendUnlocked() || window.localStorage.getItem("oriexHomeToggle") === "1";
-    } catch {
-      allowed = false;
-    }
-    if (document.querySelector(".oxh") || !allowed) {
-      if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+    const swExisting = document.getElementById(HOME_SWITCH_ID);
+    const codeExisting = document.getElementById(HOME_CODE_ID);
+
+    // Never on the React home.
+    if (document.querySelector(".oxh")) {
+      removeNode(swExisting);
+      removeNode(codeExisting);
       return;
     }
-    if (existing) return; // already shown on the current screen
+
+    let unlocked = false;
+    try {
+      unlocked =
+        isTeacher() ||
+        homeCodeUnlocked() ||
+        window.localStorage.getItem("oriexHomeToggle") === "1";
+    } catch {
+      unlocked = false;
+    }
+
+    // The correct control already exists — clean up the other state and stop.
+    if (unlocked && swExisting) {
+      removeNode(codeExisting);
+      return;
+    }
+    if (!unlocked && codeExisting) {
+      removeNode(swExisting);
+      return;
+    }
+
     // Find the ログアウト control — its presence marks the settings/account screen.
     let leaf = null;
     const nodes = document.querySelectorAll("button,a,span,div");
@@ -412,28 +470,81 @@ function injectHomeSwitchInSettingsOnce() {
     const btn = (leaf.closest && leaf.closest("button,a")) || leaf;
     const host = btn.parentElement;
     if (!host) return;
-    const sw = document.createElement("button");
-    sw.id = HOME_SWITCH_ID;
-    sw.type = "button";
-    sw.textContent = "新ホームに切り替える";
-    sw.style.cssText =
-      "display:block;width:100%;margin:0 0 10px;padding:13px;border:none;border-radius:14px;" +
-      "background:linear-gradient(135deg,#ff3d52,#b3142a);color:#fff;font-weight:900;font-size:14px;" +
-      "font-family:'Zen Maru Gothic',system-ui,sans-serif;letter-spacing:.02em;cursor:pointer;" +
-      "box-shadow:0 8px 18px rgba(179,20,42,.4);";
-    sw.addEventListener("click", () => {
-      try {
-        window.localStorage.setItem("oriexHome", "1");
-      } catch {
-        /* ignore */
+
+    if (unlocked) {
+      removeNode(codeExisting);
+      if (swExisting) return;
+      const sw = document.createElement("button");
+      sw.id = HOME_SWITCH_ID;
+      sw.type = "button";
+      sw.textContent = "新ホームに切り替える";
+      sw.style.cssText =
+        "display:block;width:100%;margin:0 0 10px;padding:13px;border:none;border-radius:14px;" +
+        "background:linear-gradient(135deg,#ff3d52,#b3142a);color:#fff;font-weight:900;font-size:14px;" +
+        "font-family:'Zen Maru Gothic',system-ui,sans-serif;letter-spacing:.02em;cursor:pointer;" +
+        "box-shadow:0 8px 18px rgba(179,20,42,.4);";
+      sw.addEventListener("click", openNewHome);
+      host.insertBefore(sw, btn);
+      return;
+    }
+
+    // Locked: show a code-entry card.
+    removeNode(swExisting);
+    if (codeExisting) return;
+    const card = document.createElement("div");
+    card.id = HOME_CODE_ID;
+    card.style.cssText =
+      "display:block;width:100%;margin:0 0 10px;padding:13px;border:1.5px solid rgba(232,39,60,.45);" +
+      "border-radius:14px;background:rgba(232,39,60,.06);" +
+      "font-family:'Zen Maru Gothic',system-ui,sans-serif;";
+    const label = document.createElement("div");
+    label.textContent = "新ホームの解放コード";
+    label.style.cssText = "font-size:13px;font-weight:900;color:#b3142a;margin-bottom:8px;";
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;gap:8px;";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "先生に聞いたコードを入力";
+    input.autocomplete = "off";
+    input.autocapitalize = "characters";
+    input.style.cssText =
+      "flex:1;min-width:0;padding:11px 12px;border:1px solid rgba(20,24,40,.18);border-radius:10px;" +
+      "background:#fff;color:#1b2236;font-size:14px;font-family:inherit;";
+    const go = document.createElement("button");
+    go.type = "button";
+    go.textContent = "解放";
+    go.style.cssText =
+      "flex:none;padding:0 16px;border:none;border-radius:10px;background:linear-gradient(135deg,#ff3d52,#b3142a);" +
+      "color:#fff;font-weight:900;font-size:14px;font-family:inherit;cursor:pointer;";
+    const msg = document.createElement("div");
+    msg.style.cssText = "font-size:11.5px;font-weight:700;margin-top:7px;min-height:14px;color:#b3142a;";
+    const submit = () => {
+      const val = (input.value || "").trim();
+      if (!val) return;
+      if (val.toLowerCase() === expectedHomeCode().toLowerCase()) {
+        try {
+          window.localStorage.setItem(HOME_UNLOCKED_KEY, "1");
+        } catch {
+          /* ignore */
+        }
+        msg.style.color = "#1a8f4a";
+        msg.textContent = "解放しました。新ホームを開きます…";
+        openNewHome();
+      } else {
+        msg.style.color = "#b3142a";
+        msg.textContent = "コードが正しくありません。先生に確認してください。";
       }
-      try {
-        window.location.reload();
-      } catch {
-        /* ignore */
-      }
+    };
+    go.addEventListener("click", submit);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") submit();
     });
-    host.insertBefore(sw, btn);
+    row.appendChild(input);
+    row.appendChild(go);
+    card.appendChild(label);
+    card.appendChild(row);
+    card.appendChild(msg);
+    host.insertBefore(card, btn);
   } catch {
     /* a cosmetic injection must never break the app */
   }

@@ -37,6 +37,12 @@ function saveClaimed(ids) {
   }
 }
 
+/** Live count of gifts not yet claimed (drives the home badge + マイページ dot). */
+export function availableGiftsCount() {
+  const claimed = loadClaimed();
+  return GIFTS.filter((g) => !claimed.includes(g.id)).length;
+}
+
 function GiftIcon({ kind }) {
   switch (kind) {
     case "streak": /* flame */

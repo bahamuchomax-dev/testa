@@ -67,6 +67,12 @@ function saveRead(ids) {
   }
 }
 
+/** Live unread-notice count (NOTICES minus the read set in localStorage). */
+export function unreadNoticesCount() {
+  const read = new Set(loadRead());
+  return NOTICES.reduce((acc, n) => (read.has(n.id) ? acc : acc + 1), 0);
+}
+
 function formatDate(iso) {
   const d = new Date(iso + "T00:00:00");
   if (Number.isNaN(d.getTime())) return iso;

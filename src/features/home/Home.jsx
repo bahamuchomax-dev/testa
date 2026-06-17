@@ -10,8 +10,8 @@ import AnalysisView from "./views/AnalysisView.jsx";
 import NoteView from "./views/NoteView.jsx";
 import CalendarView from "./views/CalendarView.jsx";
 import MoreView from "./views/MoreView.jsx";
-import NoticesView from "./views/NoticesView.jsx";
-import GiftView from "./views/GiftView.jsx";
+import NoticesView, { unreadNoticesCount } from "./views/NoticesView.jsx";
+import GiftView, { availableGiftsCount } from "./views/GiftView.jsx";
 import TimerView from "./views/TimerView.jsx";
 import RecordsView from "./views/RecordsView.jsx";
 import ProfileView from "./views/ProfileView.jsx";
@@ -155,7 +155,7 @@ const NAV = [
   { key: "timer", label: "タイマー", icon: <><circle cx="12" cy="13" r="8" /><path d="M12 9v4l3 2M9 2h6" /></> },
   { key: "records", label: "記録", icon: <path d="M4 20V9M10 20V4M16 20v-8M22 20H2" /> },
   { key: "analysis", label: "分析", icon: <><path d="M12 3a9 9 0 109 9h-9z" /><path d="M12 3v9h9" /></> },
-  { key: "profile", label: "マイページ", dot: true, icon: (
+  { key: "profile", label: "マイページ", icon: (
     <>
       <path d="M7.6 4.6C5.5 6.1 4.2 8.5 4.2 11.5c0 4.5 3.5 8 7.8 8s7.8-3.5 7.8-8c0-3-1.3-5.4-3.4-6.9" />
       <circle cx="6.1" cy="13.2" r="0.9" fill="currentColor" stroke="none" />
@@ -270,6 +270,10 @@ export default function Home({ profile, onOpen = () => {} } = {}) {
   const planTotal = planList.length;
   const initial = (p.name || "G").trim().charAt(0) || "G";
   const greet = greetingFor(p.name);
+  // Live notification counts (re-read on each render — refreshed when you return
+  // from お知らせ/ギフト). Badges hide at 0; マイページ's nav dot tracks unclaimed gifts.
+  const noticeCount = unreadNoticesCount();
+  const giftCount = availableGiftsCount();
 
   const go = (key) => {
     try { onOpen(key); } catch { /* ignore */ }
@@ -293,13 +297,13 @@ export default function Home({ profile, onOpen = () => {} } = {}) {
             <div className="oxh-top">
               <div className="oxh-brand"><Horseshoe />ORIEX</div>
               <button className="oxh-switch" onClick={switchToOriginalHome}>{Swap}元のホーム</button>
-              <button className="oxh-tbtn" onClick={() => go("notices")} aria-label="お知らせ">
+              <button className="oxh-tbtn" onClick={() => go("notices")} aria-label={`お知らせ${noticeCount > 0 ? ` 未読${noticeCount}件` : ""}`}>
                 <svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 0112 0c0 5 2 6 2 6H4s2-1 2-6" /><path d="M10 20a2 2 0 004 0" /></svg>
-                <span className="oxh-tdot">3</span>
+                {noticeCount > 0 && <span className="oxh-tdot">{noticeCount}</span>}
               </button>
-              <button className="oxh-tbtn" onClick={() => go("gift")} aria-label="ギフト">
+              <button className="oxh-tbtn" onClick={() => go("gift")} aria-label={`ギフト${giftCount > 0 ? ` ${giftCount}件` : ""}`}>
                 <svg viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="1.5" /><path d="M4 13h16M12 9v11" /></svg>
-                <span className="oxh-tdot">1</span>
+                {giftCount > 0 && <span className="oxh-tdot">{giftCount}</span>}
               </button>
               <button className="oxh-tbtn" onClick={() => go("settings")} aria-label="設定">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M19.4 13a7 7 0 000-2l2-1.5-2-3.4-2.3 1a7 7 0 00-1.7-1L14.5 3h-5l-.4 2.6a7 7 0 00-1.7 1l-2.3-1-2 3.4 2 1.5a7 7 0 000 2l-2 1.5 2 3.4 2.3-1a7 7 0 001.7 1l.4 2.6h5l.4-2.6a7 7 0 001.7-1l2.3 1 2-3.4-2-1.5z" /></svg>
@@ -418,7 +422,7 @@ export default function Home({ profile, onOpen = () => {} } = {}) {
             aria-label={n.label}
             aria-current={n.key === navActive ? "page" : undefined}
           >
-            {n.dot && <span className="oxh-nd" />}
+            {n.key === "profile" && giftCount > 0 && <span className="oxh-nd" />}
             <svg viewBox="0 0 24 24">{n.icon}</svg>
           </button>
         ))}
